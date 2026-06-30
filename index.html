@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>2D Tower Defense</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -10,234 +13,346 @@
   --accent:#3b82f6;--accent2:#a855f7;--green:#48bb78;--red:#f56565;--orange:#ed8936;--yellow:#fbbf24;
   --bg-dark:#080c12;--panel-dark:#121820;--border-dark:#2a3240;--text-dark:#e8edf2;
   --bg-light:#f0f4f8;--panel-light:#fff;--border-light:#cbd5e0;--text-light:#1a202c;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
-html,body{height:100%;overflow-x:hidden;}
-body{font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;user-select:none;transition:background 0.3s,color 0.3s;}
+html,body{height:100%;width:100%;overflow:hidden;touch-action:none;}
+body{
+  font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  user-select:none;
+  padding-top:var(--safe-top);
+  padding-bottom:var(--safe-bottom);
+  padding-left:var(--safe-left);
+  padding-right:var(--safe-right);
+  transition:background 0.3s,color 0.3s;
+}
 body.dark{background:var(--bg-dark);color:var(--text-dark);}
 body.light{background:var(--bg-light);color:var(--text-light);}
 .glass.dark,.dark .glass{background:linear-gradient(145deg,#121820,#1a2030);border:1px solid var(--border-dark);box-shadow:0 8px 28px rgba(0,0,0,0.5);}
 .glass.light,.light .glass{background:linear-gradient(145deg,#fff,#edf2f7);border:1px solid var(--border-light);box-shadow:0 8px 28px rgba(0,0,0,0.08);}
 button,select,input{font-family:inherit;}
-button{padding:6px 11px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12px;transition:all 0.15s;border:1px solid transparent;touch-action:manipulation;}
+button{padding:5px 9px;border-radius:7px;cursor:pointer;font-weight:700;font-size:11px;transition:all 0.15s;border:1px solid transparent;touch-action:manipulation;}
 .dark button,.dark select{background:#1a2030;color:#c8d0dc;border-color:#2a3240;}
 .light button,.light select{background:#edf2f7;color:#2d3748;border-color:#cbd5e0;}
 .dark button:hover{background:#222c3c;border-color:#4a6080;}
 .light button:hover{background:#e2e8f0;}
 button.sel{background:rgba(66,153,225,0.2)!important;color:#3182ce!important;border-color:#3182ce!important;box-shadow:0 0 10px rgba(66,153,225,0.3);}
 .toggle.on{background:rgba(72,187,120,0.2)!important;color:#38a169!important;border-color:#38a169!important;}
-select{padding:5px 8px;border-radius:7px;font-weight:700;font-size:12px;}
-/* Layout */
-#top-bar{width:100%;max-width:1700px;padding:8px 14px 5px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;flex-shrink:0;}
-#game-title{font-size:20px;font-weight:900;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(90deg,#3b82f6,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;}
-#top-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-#layout{display:flex;gap:10px;align-items:flex-start;max-width:1700px;width:100%;padding:0 8px 8px;flex-shrink:0;}
-#main{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;}
+select{padding:4px 7px;border-radius:7px;font-weight:700;font-size:11px;}
+
+/* ── FULL SCREEN GAME LAYOUT ── */
+#app-wrap{
+  display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;
+}
+#top-bar{
+  flex-shrink:0;width:100%;
+  padding:4px 8px 3px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:4px;
+}
+#game-title{font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(90deg,#3b82f6,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;}
+#top-right{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+
+/* Stats bar — text labels, no emojis */
+#stats-bar{
+  flex-shrink:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 10px;gap:6px;flex-wrap:nowrap;
+}
+.stat{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:700;white-space:nowrap;}
+.stat-label{opacity:0.6;font-size:10px;font-weight:600;}
+.sv{font-size:15px;font-weight:900;}
+#hv{color:var(--red);}#gv{color:var(--green);}#wv{color:var(--orange);}#sv2{color:var(--accent2);}
+#ctrl-row{display:flex;gap:4px;align-items:center;flex-wrap:nowrap;}
+#wave-rdy{font-size:10px;font-weight:700;padding:2px 5px;border-radius:5px;background:rgba(72,187,120,0.15);color:#48bb78;border:1px solid rgba(72,187,120,0.3);display:none;}
+
+/* ── MAIN LAYOUT: canvas + sidebar ── */
+#layout{
+  flex:1;display:flex;gap:6px;
+  width:100%;overflow:hidden;
+  padding:0 6px 4px;
+  min-height:0;
+}
+#main{display:flex;flex-direction:column;flex:1;gap:4px;min-width:0;min-height:0;}
+
+/* Canvas container fills available space */
+#canvas-wrap{
+  position:relative;flex:1;min-height:0;
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 12px 36px rgba(0,0,0,0.55);
+}
+#gameCanvas{
+  display:block;width:100%;height:100%;
+  touch-action:none;cursor:crosshair;
+}
+
+/* Progress */
+#prog-row{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+#map-prog{flex:1;height:4px;border-radius:3px;overflow:hidden;background:rgba(128,128,128,0.15);}
+#map-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.4s;}
+#map-prog-lbl{font-size:9px;opacity:0.6;white-space:nowrap;}
+
 /* Sidebar */
-#sidebar{width:270px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;overflow-y:auto;max-height:calc(100vh - 120px);}
-/* Stats bar */
-#stats-bar{display:flex;justify-content:space-around;align-items:center;padding:8px 12px;border-radius:12px;gap:8px;flex-wrap:wrap;}
-.stat{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;}
-.sv{font-size:18px;font-weight:900;}
-#hv{color:var(--red);}#gv{color:var(--green);}#wv{color:var(--orange);}#sv{color:var(--accent2);}
-/* Controls */
-#ctrl-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-/* Canvas */
-#canvas-wrap{position:relative;width:100%;border-radius:14px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.45);touch-action:none;}
-canvas{display:block;width:100%;height:auto;touch-action:none;}
-/* Floating config panel */
-#cfg-panel{position:absolute;display:none;flex-direction:column;gap:5px;padding:10px;width:210px;border-radius:12px;z-index:60;backdrop-filter:blur(12px);pointer-events:all;}
-.dark #cfg-panel{background:rgba(12,18,28,0.97);border:1px solid #2a3240;box-shadow:0 8px 24px rgba(0,0,0,0.7);}
-.light #cfg-panel{background:rgba(255,255,255,0.97);border:1px solid #cbd5e0;box-shadow:0 8px 24px rgba(0,0,0,0.15);}
-#cfg-title{font-size:12px;font-weight:900;text-transform:uppercase;border-bottom:1px solid rgba(128,128,128,0.2);padding-bottom:4px;margin-bottom:2px;}
-#cfg-stats{font-size:11px;display:flex;flex-direction:column;gap:2px;line-height:1.4;}
-#pri-sel{padding:4px;border-radius:5px;font-weight:700;font-size:11px;width:100%;margin-top:2px;}
-#sell-btn{background:rgba(245,101,101,0.12);color:#e53e3e;border:1px solid rgba(245,101,101,0.35);padding:5px;font-size:11px;border-radius:6px;width:100%;margin-top:3px;cursor:pointer;}
-#sell-btn:hover{background:#e53e3e;color:#fff;}
-#upg-panel{display:flex;flex-direction:column;gap:4px;margin-top:4px;padding-top:4px;border-top:1px solid rgba(128,128,128,0.2);}
-.upg-track{display:flex;flex-direction:column;gap:3px;}
-.upg-label{font-size:10px;font-weight:700;opacity:0.8;}
-.upg-dots{display:flex;gap:3px;}
-.udot{width:13px;height:13px;border-radius:50%;border:2px solid rgba(128,128,128,0.3);}
-.udot.done{border-color:#48bb78;background:#48bb78;}
-.udot.next{border-color:#ed8936;animation:pdot 1.2s infinite;}
-.udot.lock{border-color:rgba(128,128,128,0.2);}
-@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(237,137,54,0.5);}50%{box-shadow:0 0 0 4px rgba(237,137,54,0);}}
-.ubtn{font-size:10px;padding:4px 5px;border-radius:5px;background:rgba(237,137,54,0.15);color:#ed8936;border:1px solid rgba(237,137,54,0.4);cursor:pointer;text-align:left;width:100%;}
-.ubtn:hover:not(:disabled){background:#ed8936;color:#fff;}
-.ubtn:disabled{opacity:0.4;cursor:not-allowed;}
-/* Overlays */
-#go-layer,#vict-layer{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(5,8,14,0.96);backdrop-filter:blur(14px);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:100;border-radius:14px;}
-#go-layer{border:3px solid var(--red);}
-#vict-layer{border:3px solid var(--green);}
-.go-title{font-size:clamp(32px,6vw,64px);font-weight:900;color:var(--red);text-transform:uppercase;letter-spacing:3px;text-shadow:0 0 30px rgba(245,101,101,0.5);margin-bottom:10px;}
-.v-title{font-size:clamp(32px,6vw,64px);font-weight:900;color:var(--green);text-transform:uppercase;letter-spacing:3px;text-shadow:0 0 30px rgba(72,187,120,0.5);margin-bottom:10px;}
-.go-stats{font-size:clamp(13px,2.5vw,18px);color:#c8d0dc;margin-bottom:22px;text-align:center;line-height:2;}
-.go-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-.go-btns button{padding:11px 28px;font-size:clamp(13px,2vw,16px);font-weight:900;text-transform:uppercase;border-radius:9px;}
-#btn-restart{background:var(--red);color:#fff;border:none;}
-#btn-next{background:var(--green);color:#fff;border:none;}
-#btn-menu{background:#555;color:#fff;border:none;}
-/* Shop sidebar */
-.sec-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;border-bottom:2px solid rgba(128,128,128,0.18);padding-bottom:4px;opacity:0.8;}
-#shop-sort-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;}
-#shop-sort-row button{font-size:10px;padding:3px 6px;}
-#shop-filter{font-size:10px;padding:3px 6px;border-radius:5px;}
-#shop-list{display:flex;flex-direction:column;gap:4px;}
-.tower-card{display:flex;flex-direction:column;gap:2px;text-align:left;padding:7px 8px;border-radius:8px;width:100%;cursor:pointer;border:1px solid transparent;transition:all 0.15s;position:relative;touch-action:manipulation;}
+#sidebar{
+  width:220px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;
+  padding:7px;border-radius:12px;overflow-y:auto;overflow-x:hidden;
+  min-height:0;
+}
+.sec-title{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;border-bottom:2px solid rgba(128,128,128,0.18);padding-bottom:3px;opacity:0.8;}
+#shop-sort-row{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;}
+#shop-sort-row button{font-size:9px;padding:2px 5px;}
+#shop-filter{font-size:9px;padding:2px 5px;border-radius:5px;}
+#shop-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;}
+
+.tower-card{display:flex;flex-direction:column;gap:2px;text-align:left;padding:6px 7px;border-radius:7px;width:100%;cursor:pointer;border:1px solid transparent;transition:all 0.15s;position:relative;touch-action:manipulation;}
 .dark .tower-card{background:#1a2030;border-color:#2a3240;}
 .light .tower-card{background:#edf2f7;border-color:#cbd5e0;}
 .tower-card:hover,.tower-card:active{border-color:var(--accent)!important;}
 .tower-card.sel{border-color:#3182ce!important;background:rgba(66,153,225,0.12)!important;}
-.tower-card.locked-card{opacity:0.5;cursor:not-allowed;}
-.lock-badge{position:absolute;top:4px;right:6px;font-size:10px;opacity:0.7;}
-.t-name-row{font-size:12px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:4px;}
-.t-cost{font-size:11px;font-weight:700;}
+.tower-card.locked-card{opacity:0.45;cursor:not-allowed;}
+.lock-badge{position:absolute;top:3px;right:5px;font-size:9px;opacity:0.7;}
+.t-name-row{font-size:11px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:3px;}
+.t-cost{font-size:10px;font-weight:700;}
 .t-cost.aff{color:var(--green);}
 .t-cost.exp{color:var(--red);}
-.t-desc{font-size:9px;opacity:0.65;line-height:1.3;}
+.t-desc{font-size:8px;opacity:0.6;line-height:1.3;}
 .t-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;margin-top:2px;}
-.ts-cell{display:flex;flex-direction:column;align-items:center;padding:2px;border-radius:3px;font-size:9px;}
+.ts-cell{display:flex;flex-direction:column;align-items:center;padding:2px;border-radius:3px;font-size:8px;}
 .dark .ts-cell{background:rgba(255,255,255,0.05);}
 .light .ts-cell{background:rgba(0,0,0,0.05);}
-.ts-lbl{opacity:0.55;font-size:8px;}
+.ts-lbl{opacity:0.55;font-size:7px;}
+
+/* ── TOWER CONFIG PANEL — bottom-left of canvas ── */
+#cfg-panel{
+  position:absolute;
+  bottom:8px;left:8px;
+  display:none;flex-direction:column;gap:4px;
+  padding:9px;width:200px;max-height:55%;
+  border-radius:11px;z-index:60;overflow-y:auto;
+  pointer-events:all;backdrop-filter:blur(14px);
+}
+.dark #cfg-panel{background:rgba(10,15,25,0.97);border:1px solid #2a3240;box-shadow:0 8px 24px rgba(0,0,0,0.8);}
+.light #cfg-panel{background:rgba(255,255,255,0.97);border:1px solid #cbd5e0;box-shadow:0 8px 24px rgba(0,0,0,0.15);}
+#cfg-title{font-size:11px;font-weight:900;text-transform:uppercase;border-bottom:1px solid rgba(128,128,128,0.2);padding-bottom:3px;margin-bottom:2px;}
+#cfg-stats{font-size:10px;display:flex;flex-direction:column;gap:2px;line-height:1.4;}
+#pri-sel{padding:3px;border-radius:5px;font-weight:700;font-size:10px;width:100%;margin-top:2px;}
+#sell-btn{background:rgba(245,101,101,0.12);color:#e53e3e;border:1px solid rgba(245,101,101,0.35);padding:4px;font-size:10px;border-radius:6px;width:100%;margin-top:3px;cursor:pointer;}
+#sell-btn:hover{background:#e53e3e;color:#fff;}
+#upg-panel{display:flex;flex-direction:column;gap:3px;margin-top:3px;padding-top:3px;border-top:1px solid rgba(128,128,128,0.2);}
+.upg-track{display:flex;flex-direction:column;gap:2px;}
+.upg-label{font-size:9px;font-weight:700;opacity:0.8;}
+.upg-dots{display:flex;gap:3px;}
+.udot{width:11px;height:11px;border-radius:50%;border:2px solid rgba(128,128,128,0.3);}
+.udot.done{border-color:#48bb78;background:#48bb78;}
+.udot.next{border-color:#ed8936;animation:pdot 1.2s infinite;}
+.udot.lock{border-color:rgba(128,128,128,0.2);}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(237,137,54,0.5);}50%{box-shadow:0 0 0 4px rgba(237,137,54,0);}}
+.ubtn{font-size:9px;padding:3px 4px;border-radius:5px;background:rgba(237,137,54,0.15);color:#ed8936;border:1px solid rgba(237,137,54,0.4);cursor:pointer;text-align:left;width:100%;}
+.ubtn:hover:not(:disabled){background:#ed8936;color:#fff;}
+.ubtn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* Overlays */
+#go-layer,#vict-layer{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(5,8,14,0.96);backdrop-filter:blur(14px);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:100;border-radius:12px;}
+#go-layer{border:3px solid var(--red);}
+#vict-layer{border:3px solid var(--green);}
+.go-title{font-size:clamp(28px,6vw,56px);font-weight:900;color:var(--red);text-transform:uppercase;letter-spacing:3px;text-shadow:0 0 30px rgba(245,101,101,0.5);margin-bottom:8px;}
+.v-title{font-size:clamp(28px,6vw,56px);font-weight:900;color:var(--green);text-transform:uppercase;letter-spacing:3px;text-shadow:0 0 30px rgba(72,187,120,0.5);margin-bottom:8px;}
+.go-stats{font-size:clamp(12px,2.5vw,17px);color:#c8d0dc;margin-bottom:18px;text-align:center;line-height:2;}
+.go-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.go-btns button{padding:9px 22px;font-size:clamp(12px,2vw,15px);font-weight:900;text-transform:uppercase;border-radius:9px;}
+#btn-restart{background:var(--red);color:#fff;border:none;}
+#btn-next{background:var(--green);color:#fff;border:none;}
+#btn-menu{background:#555;color:#fff;border:none;}
+
 /* Audio */
 #audio-drop{position:relative;}
-#audio-content{display:none;position:absolute;right:0;top:34px;border-radius:10px;padding:10px;min-width:170px;z-index:200;box-shadow:0 10px 25px rgba(0,0,0,0.5);}
+#audio-content{display:none;position:absolute;right:0;top:30px;border-radius:10px;padding:8px;min-width:160px;z-index:200;box-shadow:0 10px 25px rgba(0,0,0,0.5);}
 .dark #audio-content{background:#1a2030;border:1px solid #2a3240;}
 .light #audio-content{background:#fff;border:1px solid #cbd5e0;}
-#audio-content label{font-size:10px;font-weight:700;opacity:0.8;display:block;margin-bottom:2px;margin-top:6px;}
+#audio-content label{font-size:9px;font-weight:700;opacity:0.8;display:block;margin-bottom:2px;margin-top:5px;}
 #audio-content label:first-child{margin-top:0;}
 #audio-content input[type=range]{width:100%;accent-color:var(--accent);}
+
 /* Save panel */
-#save-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:14px;padding:18px;z-index:300;width:min(500px,95vw);display:none;box-shadow:0 20px 50px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;}
+#save-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:14px;padding:16px;z-index:300;width:min(480px,96vw);display:none;box-shadow:0 20px 50px rgba(0,0,0,0.8);max-height:90vh;overflow-y:auto;}
 .dark #save-panel{background:#0d1520;border:2px solid #2a3240;}
 .light #save-panel{background:#fff;border:2px solid #cbd5e0;}
-#save-panel h2{font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center;}
-.s-slot{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:7px;border:1px solid #2a3240;margin-bottom:5px;transition:all 0.15s;}
+#save-panel h2{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+.s-slot{display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:7px;border:1px solid #2a3240;margin-bottom:4px;transition:all 0.15s;}
 .s-slot:hover{border-color:var(--accent);}
 .s-slot.empty{opacity:0.4;border-style:dashed;}
-.s-slot-btns{display:flex;gap:4px;flex-shrink:0;}
-.s-slot-btns button{padding:3px 7px;font-size:10px;border-radius:5px;}
-#save-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:16px;cursor:pointer;opacity:0.6;}
+.s-slot-btns{display:flex;gap:3px;flex-shrink:0;}
+.s-slot-btns button{padding:3px 6px;font-size:9px;border-radius:5px;}
+#save-close{position:absolute;top:7px;right:9px;background:none;border:none;font-size:15px;cursor:pointer;opacity:0.6;}
+
 /* Map panel */
-#map-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:14px;padding:18px;z-index:300;width:min(720px,97vw);display:none;box-shadow:0 20px 50px rgba(0,0,0,0.8);max-height:92vh;overflow-y:auto;}
+#map-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:14px;padding:16px;z-index:300;width:min(700px,97vw);display:none;box-shadow:0 20px 50px rgba(0,0,0,0.8);max-height:92vh;overflow-y:auto;}
 .dark #map-panel{background:#0d1520;border:2px solid #2a3240;}
 .light #map-panel{background:#fff;border:2px solid #cbd5e0;}
-#map-panel h2{font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center;}
-#map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
-.map-card{padding:10px;border-radius:9px;border:1px solid #2a3240;cursor:pointer;transition:all 0.15s;text-align:center;}
+#map-panel h2{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+#map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;}
+.map-card{padding:9px;border-radius:9px;border:1px solid #2a3240;cursor:pointer;transition:all 0.15s;text-align:center;}
 .map-card.unlocked{opacity:1;}
 .map-card.locked-map{opacity:0.38;filter:grayscale(1);cursor:not-allowed;}
 .map-card.beaten{border-color:#48bb78;}
 .map-card:hover:not(.locked-map){border-color:var(--accent);transform:translateY(-2px);}
-.map-card .map-num{font-size:11px;font-weight:700;opacity:0.6;margin-bottom:3px;}
-.map-card .map-name{font-size:12px;font-weight:800;line-height:1.2;}
-.map-card .map-status{font-size:10px;margin-top:4px;}
-#map-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:16px;cursor:pointer;opacity:0.6;}
-/* Progress */
-#map-prog{height:5px;border-radius:3px;margin-top:3px;overflow:hidden;background:rgba(128,128,128,0.15);}
-#map-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.4s;}
-/* Wave ready */
-#wave-rdy{font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;background:rgba(72,187,120,0.15);color:#48bb78;border:1px solid rgba(72,187,120,0.3);display:none;}
-/* Responsive */
-@media(max-width:800px){
-  #layout{flex-direction:column;padding:0 4px 8px;}
-  #sidebar{width:100%;max-height:none;flex-direction:column;}
-  #shop-list{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;}
-  #cfg-panel{width:185px;font-size:10px;}
-  #stats-bar{gap:5px;padding:6px 8px;}
-  .sv{font-size:15px;}
-  .stat{font-size:11px;}
-  #ctrl-row button{font-size:11px;padding:5px 8px;}
-}
-@media(max-width:480px){
-  #shop-list{grid-template-columns:1fr 1fr;}
-  #game-title{font-size:15px;}
-  #top-right{gap:4px;}
-  button{padding:5px 7px;font-size:11px;}
-}
+.map-card .map-num{font-size:10px;font-weight:700;opacity:0.6;margin-bottom:2px;}
+.map-card .map-name{font-size:11px;font-weight:800;line-height:1.2;}
+.map-card .map-status{font-size:9px;margin-top:3px;}
+#map-close{position:absolute;top:7px;right:9px;background:none;border:none;font-size:15px;cursor:pointer;opacity:0.6;}
+
 /* Unlock notification */
-.unlock-notif{position:fixed;bottom:20px;right:20px;background:linear-gradient(135deg,#a855f7,#3b82f6);color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;z-index:500;animation:slideIn 0.4s ease,fadeOut 0.5s ease 3s forwards;}
+.unlock-notif{position:fixed;bottom:20px;right:20px;background:linear-gradient(135deg,#a855f7,#3b82f6);color:#fff;padding:9px 14px;border-radius:10px;font-weight:700;font-size:12px;z-index:500;animation:slideIn 0.4s ease,fadeOut 0.5s ease 3s forwards;}
 @keyframes slideIn{from{transform:translateX(120%);opacity:0;}to{transform:translateX(0);opacity:1;}}
 @keyframes fadeOut{to{opacity:0;transform:translateX(120%);}}
+
+/* Landscape hint overlay for portrait mobile */
+#orient-hint{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,8,14,0.97);z-index:1000;flex-direction:column;justify-content:center;align-items:center;gap:12px;}
+#orient-hint .oh-icon{font-size:52px;animation:rotate90 1.5s ease-in-out infinite alternate;}
+#orient-hint .oh-text{font-size:18px;font-weight:700;color:#fff;text-align:center;}
+#orient-hint .oh-sub{font-size:13px;color:#888;text-align:center;}
+@keyframes rotate90{from{transform:rotate(0deg);}to{transform:rotate(90deg);}}
+
+/* ── MOBILE RESPONSIVE ── */
+/* Tablet landscape */
+@media(max-width:1100px){
+  #sidebar{width:185px;}
+}
+/* Small tablet / large phone landscape */
+@media(max-width:800px){
+  #game-title{font-size:13px;}
+  #sidebar{width:160px;}
+  .tower-card{padding:4px 5px;}
+  .t-name-row{font-size:10px;}
+  .t-desc{font-size:7px;}
+  .ts-cell{font-size:7px;}
+  .ts-lbl{font-size:6px;}
+  button{font-size:10px;padding:4px 6px;}
+  .stat{font-size:10px;}
+  .sv{font-size:13px;}
+  #cfg-panel{width:175px;}
+}
+/* Phone landscape — hide sidebar, use compact overlay */
+@media(max-width:600px){
+  #sidebar{display:none;}
+  #float-shop{display:flex!important;}
+}
+@media(max-height:400px){
+  #top-bar{padding:2px 6px;}
+  #stats-bar{padding:2px 8px;}
+  #sidebar{width:145px;}
+}
+
+/* Float shop for small landscape phones */
+#float-shop{
+  display:none;position:absolute;bottom:8px;right:8px;z-index:50;
+  flex-direction:column;gap:3px;width:155px;max-height:70%;overflow-y:auto;
+  border-radius:10px;padding:6px;
+  backdrop-filter:blur(14px);pointer-events:all;
+}
+.dark #float-shop{background:rgba(10,15,25,0.96);border:1px solid #2a3240;}
+.light #float-shop{background:rgba(255,255,255,0.96);border:1px solid #cbd5e0;}
+
+/* Portrait phone — show orientation hint */
+@media(orientation:portrait) and (max-width:768px){
+  #orient-hint{display:flex;}
+}
 </style>
 </head>
 <body class="dark">
 
-<div id="top-bar">
-  <div id="game-title">2D Tower Defense</div>
-  <div id="top-right">
-    <button id="btn-maps">🗺️ Maps</button>
-    <button id="btn-saves">💾 Saves</button>
-    <div id="audio-drop">
-      <button id="audio-btn">🔊</button>
-      <div id="audio-content">
-        <label>🎵 Music</label><input type="range" id="bgm-vol" min="0" max="100" value="25">
-        <label>💥 SFX</label><input type="range" id="sfx-vol" min="0" max="100" value="55">
-        <label><input type="checkbox" id="mute-all"> Mute All</label>
-      </div>
-    </div>
-    <select id="theme-sel"><option value="dark">🌙 Dark</option><option value="light">☀️ Light</option></select>
-    <select id="gfx-sel"><option value="low">Low</option><option value="medium">Med</option><option value="high">High</option><option value="ultra" selected>Ultra</option></select>
-  </div>
+<div id="orient-hint">
+  <div class="oh-icon">📱</div>
+  <div class="oh-text">Rotate your device</div>
+  <div class="oh-sub">This game plays best in landscape mode</div>
 </div>
 
-<div id="layout">
-  <div id="main">
-    <div id="stats-bar" class="glass">
-      <div class="stat">❤️ <span id="hv" class="sv">20</span></div>
-      <div class="stat">💰 <span id="gv" class="sv">150</span></div>
-      <div class="stat">🌊 <span id="wv" class="sv">0</span></div>
-      <div class="stat">⭐ <span id="sv" class="sv">0</span></div>
-      <div id="ctrl-row">
-        <button id="btn-wave">▶ Start Wave</button>
-        <button id="btn-auto" class="toggle">Auto: OFF</button>
-        <span id="wave-rdy">✅ Ready</span>
-        <button id="btn-speed" class="toggle">1×</button>
-        <button id="btn-desel">✕ Desel</button>
+<div id="app-wrap">
+  <div id="top-bar">
+    <div id="game-title">2D Tower Defense</div>
+    <div id="top-right">
+      <button id="btn-maps">🗺️ Maps</button>
+      <button id="btn-saves">💾 Saves</button>
+      <div id="audio-drop">
+        <button id="audio-btn">🔊</button>
+        <div id="audio-content">
+          <label>Music</label><input type="range" id="bgm-vol" min="0" max="100" value="25">
+          <label>SFX</label><input type="range" id="sfx-vol" min="0" max="100" value="55">
+          <label><input type="checkbox" id="mute-all"> Mute All</label>
+        </div>
       </div>
-    </div>
-    <div id="canvas-wrap">
-      <canvas id="gameCanvas" width="1200" height="720"></canvas>
-      <div id="cfg-panel">
-        <div id="cfg-title">—</div>
-        <div id="cfg-stats"></div>
-        <label style="font-size:10px;font-weight:700;margin-top:3px;">Priority:</label>
-        <select id="pri-sel">
-          <option value="first">First</option><option value="closest">Closest</option>
-          <option value="last">Last</option><option value="strongest">Strongest</option>
-          <option value="weakest">Weakest</option>
-        </select>
-        <div id="upg-panel"></div>
-        <button id="sell-btn">Sell +$<span id="sell-v">0</span></button>
-      </div>
-      <div id="go-layer">
-        <h1 class="go-title">Game Over</h1>
-        <div class="go-stats" id="go-stats"></div>
-        <div class="go-btns"><button id="btn-restart">Restart</button></div>
-      </div>
-      <div id="vict-layer">
-        <h1 class="v-title">Victory!</h1>
-        <div class="go-stats" id="v-stats"></div>
-        <div class="go-btns"><button id="btn-next">Next Map ▶</button><button id="btn-menu">Main Menu</button></div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;padding:0 2px;">
-      <div id="map-prog" style="flex:1;"><div id="map-prog-fill" style="width:0%"></div></div>
-      <span id="map-prog-lbl" style="font-size:10px;opacity:0.6;white-space:nowrap;"></span>
+      <select id="theme-sel"><option value="dark">🌙 Dark</option><option value="light">☀️ Light</option></select>
+      <select id="gfx-sel"><option value="low">Low</option><option value="medium">Med</option><option value="high">High</option><option value="ultra" selected>Ultra</option></select>
     </div>
   </div>
 
-  <div id="sidebar" class="glass">
-    <div class="sec-title">🏗️ Towers</div>
-    <div id="shop-sort-row">
-      <button id="sort-price" class="sel">$ Price</button>
-      <button id="sort-dmg">⚔ DMG</button>
-      <button id="sort-rng">🎯 Range</button>
-      <button id="sort-dps">📊 DPS</button>
-      <select id="shop-filter"><option value="all">All</option><option value="unlocked">Unlocked</option></select>
+  <div id="stats-bar" class="glass">
+    <div class="stat"><span class="stat-label">HP</span><span id="hv" class="sv">20</span></div>
+    <div class="stat"><span class="stat-label">Gold</span><span id="gv" class="sv">150</span></div>
+    <div class="stat"><span class="stat-label">Wave</span><span id="wv" class="sv">0/10</span></div>
+    <div class="stat"><span class="stat-label">Score</span><span id="sv2" class="sv">0</span></div>
+    <div id="ctrl-row">
+      <button id="btn-wave">▶ Wave</button>
+      <button id="btn-auto" class="toggle">Auto: OFF</button>
+      <span id="wave-rdy">Ready</span>
+      <button id="btn-speed" class="toggle">1×</button>
+      <button id="btn-desel">✕</button>
     </div>
-    <div id="shop-list"></div>
+  </div>
+
+  <div id="layout">
+    <div id="main">
+      <div id="canvas-wrap">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Tower config — bottom left of canvas -->
+        <div id="cfg-panel">
+          <div id="cfg-title">—</div>
+          <div id="cfg-stats"></div>
+          <label style="font-size:9px;font-weight:700;margin-top:2px;">Priority:</label>
+          <select id="pri-sel">
+            <option value="first">First</option><option value="closest">Closest</option>
+            <option value="last">Last</option><option value="strongest">Strongest</option>
+            <option value="weakest">Weakest</option>
+          </select>
+          <div id="upg-panel"></div>
+          <button id="sell-btn">Sell +$<span id="sell-v">0</span></button>
+        </div>
+
+        <!-- Float shop for tiny landscape phones -->
+        <div id="float-shop"></div>
+
+        <div id="go-layer">
+          <h1 class="go-title">Game Over</h1>
+          <div class="go-stats" id="go-stats"></div>
+          <div class="go-btns"><button id="btn-restart">Restart</button></div>
+        </div>
+        <div id="vict-layer">
+          <h1 class="v-title">Victory!</h1>
+          <div class="go-stats" id="v-stats"></div>
+          <div class="go-btns"><button id="btn-next">Next Map ▶</button><button id="btn-menu">Menu</button></div>
+        </div>
+      </div>
+      <div id="prog-row">
+        <div id="map-prog"><div id="map-prog-fill" style="width:0%"></div></div>
+        <span id="map-prog-lbl"></span>
+      </div>
+    </div>
+
+    <div id="sidebar" class="glass">
+      <div class="sec-title">🏗️ Towers</div>
+      <div id="shop-sort-row">
+        <button id="sort-price" class="sel">$ Price</button>
+        <button id="sort-dmg">DMG</button>
+        <button id="sort-rng">Range</button>
+        <button id="sort-dps">DPS</button>
+        <select id="shop-filter"><option value="all">All</option><option value="unlocked">Unlocked</option></select>
+      </div>
+      <div id="shop-list"></div>
+    </div>
   </div>
 </div>
 
@@ -246,9 +361,9 @@ canvas{display:block;width:100%;height:auto;touch-action:none;}
   <button id="save-close">✕</button>
   <h2>💾 Save Slots</h2>
   <div id="save-list"></div>
-  <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;">
-    <button id="btn-save-now" style="background:var(--accent);color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:13px;">Save Now</button>
-    <button id="btn-new-game" style="background:var(--green);color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:13px;">New Game</button>
+  <div style="margin-top:8px;display:flex;gap:6px;justify-content:center;">
+    <button id="btn-save-now" style="background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:7px;font-size:12px;">Save Now</button>
+    <button id="btn-new-game" style="background:var(--green);color:#fff;border:none;padding:6px 14px;border-radius:7px;font-size:12px;">New Game</button>
   </div>
 </div>
 
@@ -261,11 +376,32 @@ canvas{display:block;width:100%;height:auto;touch-action:none;}
 
 <script>
 // ============================================================
-// CORE STATE
+// CANVAS SIZING — fill the canvas-wrap element exactly
 // ============================================================
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Game's internal logical resolution
+const GAME_W = 1440;
+const GAME_H = 810;
+
+function resizeCanvas(){
+  let wrap = document.getElementById("canvas-wrap");
+  let rect = wrap.getBoundingClientRect();
+  // Set CSS size to fill wrap
+  canvas.style.width = rect.width + "px";
+  canvas.style.height = rect.height + "px";
+  // Keep internal resolution fixed for consistent gameplay
+  canvas.width = GAME_W;
+  canvas.height = GAME_H;
+}
+window.addEventListener("resize", resizeCanvas);
+window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 200));
+// Will be called after DOM fully laid out
+
+// ============================================================
+// CORE STATE
+// ============================================================
 let playerHp=20,gold=150,wave=0,score=0;
 let waveActive=false,waveInProgress=false;
 let selectedTowerType=null,selectedTowerObj=null;
@@ -279,7 +415,6 @@ let shopSortMode="price",shopFilter="all";
 let unlockedTowers=new Set(["burst_cannon","cannon","frost","sniper","minigun"]);
 let beatMaps=new Set();
 let unlockedMaps=new Set([0]);
-let lastTap=0;
 
 const towers=[],enemies=[],projectiles=[],particles=[];
 const floatingTexts=[],muzzleFlashes=[],lightningVisuals=[];
@@ -289,463 +424,311 @@ let audioCtx=null,bgmGainNode=null,sfxGainNode=null;
 let bgmVolume=0.25,sfxVolume=0.55,audioMuted=false,audioInitialized=false;
 
 // ============================================================
-// MAPS (20 total)
+// MAPS — wave targets: map N = N*10 waves. Paths scaled to 1440x810
 // ============================================================
 const MAPS=[
-  {name:"Grassy Plains",    short:"Plains",  bg:"#6cb043",roadColor:"#e6cba4",decorColor:"#2f6920",decorType:"tree",  targetWaves:10,startGold:200,startHp:20,unlockReq:null,
-   path:[{x:-30,y:220},{x:450,y:220},{x:450,y:550},{x:900,y:550},{x:900,y:300},{x:1230,y:300}]},
-  {name:"Verdant Valley",   short:"Valley",  bg:"#529e37",roadColor:"#caa273",decorColor:"#1d5212",decorType:"tree",  targetWaves:14,startGold:200,startHp:20,unlockReq:0,
-   path:[{x:220,y:-30},{x:220,y:590},{x:680,y:590},{x:680,y:150},{x:1050,y:150},{x:1050,y:730}]},
-  {name:"Ancient Forest",   short:"Forest",  bg:"#3a7a24",roadColor:"#b88c5c",decorColor:"#0d3206",decorType:"pine",  targetWaves:18,startGold:225,startHp:20,unlockReq:1,
-   path:[{x:-30,y:380},{x:300,y:380},{x:300,y:120},{x:900,y:120},{x:900,y:600},{x:1230,y:600}]},
-  {name:"Desert Dunes",     short:"Dunes",   bg:"#e8c96a",roadColor:"#dfad5b",decorColor:"#b87d33",decorType:"shrub", targetWaves:22,startGold:225,startHp:18,unlockReq:2,
-   path:[{x:600,y:-30},{x:600,y:300},{x:150,y:300},{x:150,y:580},{x:900,y:580},{x:900,y:300},{x:1230,y:300}]},
-  {name:"Volcanic Ash",     short:"Volcano", bg:"#3a2218",roadColor:"#7a4f30",decorColor:"#8b2500",decorType:"rock",  targetWaves:26,startGold:250,startHp:18,unlockReq:3,
-   path:[{x:-30,y:150},{x:980,y:150},{x:980,y:580},{x:220,y:580},{x:220,y:380},{x:700,y:380},{x:1230,y:380}]},
-  {name:"Frozen Tundra",    short:"Tundra",  bg:"#b8d4e8",roadColor:"#d0e8f4",decorColor:"#607ea0",decorType:"pine",  targetWaves:30,startGold:250,startHp:16,unlockReq:4,
-   path:[{x:-30,y:360},{x:250,y:360},{x:250,y:100},{x:600,y:100},{x:600,y:620},{x:950,y:620},{x:950,y:260},{x:1230,y:260}]},
-  {name:"Haunted Swamp",    short:"Swamp",   bg:"#2d4a2a",roadColor:"#8a9a60",decorColor:"#1a3018",decorType:"tree",  targetWaves:34,startGold:275,startHp:15,unlockReq:5,
-   path:[{x:100,y:-30},{x:100,y:200},{x:700,y:200},{x:700,y:490},{x:300,y:490},{x:300,y:680},{x:1000,y:680},{x:1000,y:100},{x:1230,y:100}]},
-  {name:"Sky Citadel",      short:"Citadel", bg:"#1a1a3e",roadColor:"#3a3a6a",decorColor:"#2a2a5a",decorType:"shrub", targetWaves:38,startGold:275,startHp:14,unlockReq:6,
-   path:[{x:-30,y:580},{x:400,y:580},{x:400,y:400},{x:800,y:400},{x:800,y:200},{x:200,y:200},{x:200,y:50},{x:700,y:50},{x:1230,y:50}]},
-  {name:"Infernal Depths",  short:"Inferno", bg:"#1a0800",roadColor:"#5a2200",decorColor:"#7a1500",decorType:"rock",  targetWaves:42,startGold:300,startHp:12,unlockReq:7,
-   path:[{x:-30,y:360},{x:150,y:360},{x:150,y:100},{x:500,y:100},{x:500,y:620},{x:850,y:620},{x:850,y:200},{x:1100,y:200},{x:1100,y:500},{x:1230,y:500}]},
-  {name:"Crystal Caves",    short:"Crystal", bg:"#0d0d2e",roadColor:"#2a1a4a",decorColor:"#4a1a8a",decorType:"shrub", targetWaves:46,startGold:300,startHp:12,unlockReq:8,
-   path:[{x:600,y:-30},{x:600,y:200},{x:200,y:200},{x:200,y:520},{x:600,y:520},{x:600,y:360},{x:1000,y:360},{x:1000,y:700},{x:1230,y:700}]},
-  {name:"Storm Peaks",      short:"Storm",   bg:"#1e2a3a",roadColor:"#3a4a5a",decorColor:"#2a3a4a",decorType:"pine",  targetWaves:50,startGold:325,startHp:10,unlockReq:9,
-   path:[{x:-30,y:180},{x:300,y:180},{x:300,y:540},{x:700,y:540},{x:700,y:100},{x:1000,y:100},{x:1000,y:540},{x:1230,y:540}]},
-  {name:"Neon Wasteland",   short:"Neon",    bg:"#0a001a",roadColor:"#1a0030",decorColor:"#3d00a0",decorType:"shrub", targetWaves:55,startGold:325,startHp:10,unlockReq:10,
-   path:[{x:-30,y:360},{x:180,y:360},{x:180,y:80},{x:480,y:80},{x:480,y:640},{x:780,y:640},{x:780,y:240},{x:1050,y:240},{x:1050,y:500},{x:1230,y:500}]},
-  {name:"Ruined City",      short:"Ruins",   bg:"#2a2a2a",roadColor:"#4a4a4a",decorColor:"#1a1a1a",decorType:"rock",  targetWaves:60,startGold:350,startHp:9,unlockReq:11,
-   path:[{x:100,y:-30},{x:100,y:300},{x:600,y:300},{x:600,y:100},{x:1000,y:100},{x:1000,y:500},{x:400,y:500},{x:400,y:700},{x:1230,y:700}]},
-  {name:"Ocean Reef",       short:"Reef",    bg:"#0a2a4a",roadColor:"#0a4a6a",decorColor:"#0a3a5a",decorType:"shrub", targetWaves:65,startGold:350,startHp:9,unlockReq:12,
-   path:[{x:-30,y:200},{x:350,y:200},{x:350,y:520},{x:700,y:520},{x:700,y:200},{x:900,y:200},{x:900,y:600},{x:1230,y:600}]},
-  {name:"Shadowlands",      short:"Shadow",  bg:"#0d0000",roadColor:"#2a0000",decorColor:"#1a0000",decorType:"tree",  targetWaves:70,startGold:375,startHp:8,unlockReq:13,
-   path:[{x:600,y:-30},{x:600,y:360},{x:100,y:360},{x:100,y:620},{x:700,y:620},{x:700,y:420},{x:1100,y:420},{x:1100,y:100},{x:1230,y:100}]},
-  {name:"Clockwork Factory",short:"Factory", bg:"#1a1200",roadColor:"#3a2800",decorColor:"#2a1a00",decorType:"rock",  targetWaves:75,startGold:400,startHp:7,unlockReq:14,
-   path:[{x:-30,y:100},{x:500,y:100},{x:500,y:340},{x:200,y:340},{x:200,y:580},{x:800,y:580},{x:800,y:340},{x:1100,y:340},{x:1100,y:700},{x:1230,y:700}]},
-  {name:"Abyss Gate",       short:"Abyss",   bg:"#000008",roadColor:"#000828",decorColor:"#000a30",decorType:"shrub", targetWaves:80,startGold:400,startHp:6,unlockReq:15,
-   path:[{x:-30,y:550},{x:250,y:550},{x:250,y:150},{x:550,y:150},{x:550,y:550},{x:850,y:550},{x:850,y:150},{x:1100,y:150},{x:1100,y:680},{x:1230,y:680}]},
-  {name:"Dragon's Spine",   short:"Dragon",  bg:"#1a0008",roadColor:"#3a0010",decorColor:"#5a0018",decorType:"rock",  targetWaves:90,startGold:450,startHp:5,unlockReq:16,
-   path:[{x:100,y:-30},{x:100,y:150},{x:550,y:150},{x:550,y:550},{x:250,y:550},{x:250,y:300},{x:800,y:300},{x:800,y:620},{x:1100,y:620},{x:1100,y:200},{x:1230,y:200}]},
-  {name:"Void Sanctum",     short:"Void",    bg:"#000000",roadColor:"#0a000a",decorColor:"#1a001a",decorType:"shrub", targetWaves:100,startGold:500,startHp:4,unlockReq:17,
-   path:[{x:-30,y:360},{x:200,y:360},{x:200,y:60},{x:500,y:60},{x:500,y:660},{x:800,y:660},{x:800,y:260},{x:1050,y:260},{x:1050,y:560},{x:1230,y:560}]},
+  {name:"Grassy Plains",    short:"Plains",  bg:"#6cb043",roadColor:"#e6cba4",decorColor:"#2f6920",decorType:"tree",  targetWaves:10, startGold:200,startHp:20,unlockReq:null,
+   path:[{x:-40,y:260},{x:540,y:260},{x:540,y:640},{x:1080,y:640},{x:1080,y:350},{x:1480,y:350}]},
+  {name:"Verdant Valley",   short:"Valley",  bg:"#529e37",roadColor:"#caa273",decorColor:"#1d5212",decorType:"tree",  targetWaves:20, startGold:200,startHp:20,unlockReq:0,
+   path:[{x:260,y:-40},{x:260,y:690},{x:810,y:690},{x:810,y:170},{x:1260,y:170},{x:1260,y:850}]},
+  {name:"Ancient Forest",   short:"Forest",  bg:"#3a7a24",roadColor:"#b88c5c",decorColor:"#0d3206",decorType:"pine",  targetWaves:30, startGold:225,startHp:20,unlockReq:1,
+   path:[{x:-40,y:450},{x:360,y:450},{x:360,y:140},{x:1080,y:140},{x:1080,y:700},{x:1480,y:700}]},
+  {name:"Desert Dunes",     short:"Dunes",   bg:"#e8c96a",roadColor:"#dfad5b",decorColor:"#b87d33",decorType:"shrub", targetWaves:40, startGold:225,startHp:18,unlockReq:2,
+   path:[{x:720,y:-40},{x:720,y:360},{x:180,y:360},{x:180,y:680},{x:1080,y:680},{x:1080,y:360},{x:1480,y:360}]},
+  {name:"Volcanic Ash",     short:"Volcano", bg:"#3a2218",roadColor:"#7a4f30",decorColor:"#8b2500",decorType:"rock",  targetWaves:50, startGold:250,startHp:18,unlockReq:3,
+   path:[{x:-40,y:180},{x:1170,y:180},{x:1170,y:680},{x:260,y:680},{x:260,y:450},{x:840,y:450},{x:1480,y:450}]},
+  {name:"Frozen Tundra",    short:"Tundra",  bg:"#b8d4e8",roadColor:"#d0e8f4",decorColor:"#607ea0",decorType:"pine",  targetWaves:60, startGold:250,startHp:16,unlockReq:4,
+   path:[{x:-40,y:420},{x:300,y:420},{x:300,y:120},{x:720,y:120},{x:720,y:720},{x:1140,y:720},{x:1140,y:310},{x:1480,y:310}]},
+  {name:"Haunted Swamp",    short:"Swamp",   bg:"#2d4a2a",roadColor:"#8a9a60",decorColor:"#1a3018",decorType:"tree",  targetWaves:70, startGold:275,startHp:15,unlockReq:5,
+   path:[{x:120,y:-40},{x:120,y:235},{x:840,y:235},{x:840,y:570},{x:360,y:570},{x:360,y:790},{x:1200,y:790},{x:1200,y:120},{x:1480,y:120}]},
+  {name:"Sky Citadel",      short:"Citadel", bg:"#1a1a3e",roadColor:"#3a3a6a",decorColor:"#2a2a5a",decorType:"shrub", targetWaves:80, startGold:275,startHp:14,unlockReq:6,
+   path:[{x:-40,y:680},{x:480,y:680},{x:480,y:470},{x:960,y:470},{x:960,y:235},{x:240,y:235},{x:240,y:60},{x:840,y:60},{x:1480,y:60}]},
+  {name:"Infernal Depths",  short:"Inferno", bg:"#1a0800",roadColor:"#5a2200",decorColor:"#7a1500",decorType:"rock",  targetWaves:90, startGold:300,startHp:12,unlockReq:7,
+   path:[{x:-40,y:420},{x:180,y:420},{x:180,y:120},{x:600,y:120},{x:600,y:720},{x:1020,y:720},{x:1020,y:235},{x:1320,y:235},{x:1320,y:600},{x:1480,y:600}]},
+  {name:"Crystal Caves",    short:"Crystal", bg:"#0d0d2e",roadColor:"#2a1a4a",decorColor:"#4a1a8a",decorType:"shrub", targetWaves:100,startGold:300,startHp:12,unlockReq:8,
+   path:[{x:720,y:-40},{x:720,y:235},{x:240,y:235},{x:240,y:620},{x:720,y:620},{x:720,y:420},{x:1200,y:420},{x:1200,y:810},{x:1480,y:810}]},
+  {name:"Storm Peaks",      short:"Storm",   bg:"#1e2a3a",roadColor:"#3a4a5a",decorColor:"#2a3a4a",decorType:"pine",  targetWaves:110,startGold:325,startHp:10,unlockReq:9,
+   path:[{x:-40,y:210},{x:360,y:210},{x:360,y:630},{x:840,y:630},{x:840,y:120},{x:1200,y:120},{x:1200,y:630},{x:1480,y:630}]},
+  {name:"Neon Wasteland",   short:"Neon",    bg:"#0a001a",roadColor:"#1a0030",decorColor:"#3d00a0",decorType:"shrub", targetWaves:120,startGold:325,startHp:10,unlockReq:10,
+   path:[{x:-40,y:420},{x:216,y:420},{x:216,y:95},{x:576,y:95},{x:576,y:745},{x:936,y:745},{x:936,y:280},{x:1260,y:280},{x:1260,y:590},{x:1480,y:590}]},
+  {name:"Ruined City",      short:"Ruins",   bg:"#2a2a2a",roadColor:"#4a4a4a",decorColor:"#1a1a1a",decorType:"rock",  targetWaves:130,startGold:350,startHp:9,unlockReq:11,
+   path:[{x:120,y:-40},{x:120,y:360},{x:720,y:360},{x:720,y:120},{x:1200,y:120},{x:1200,y:600},{x:480,y:600},{x:480,y:810},{x:1480,y:810}]},
+  {name:"Ocean Reef",       short:"Reef",    bg:"#0a2a4a",roadColor:"#0a4a6a",decorColor:"#0a3a5a",decorType:"shrub", targetWaves:140,startGold:350,startHp:9,unlockReq:12,
+   path:[{x:-40,y:235},{x:420,y:235},{x:420,y:620},{x:840,y:620},{x:840,y:235},{x:1080,y:235},{x:1080,y:700},{x:1480,y:700}]},
+  {name:"Shadowlands",      short:"Shadow",  bg:"#0d0000",roadColor:"#2a0000",decorColor:"#1a0000",decorType:"tree",  targetWaves:150,startGold:375,startHp:8,unlockReq:13,
+   path:[{x:720,y:-40},{x:720,y:420},{x:120,y:420},{x:120,y:730},{x:840,y:730},{x:840,y:490},{x:1320,y:490},{x:1320,y:120},{x:1480,y:120}]},
+  {name:"Clockwork Factory",short:"Factory", bg:"#1a1200",roadColor:"#3a2800",decorColor:"#2a1a00",decorType:"rock",  targetWaves:160,startGold:400,startHp:7,unlockReq:14,
+   path:[{x:-40,y:120},{x:600,y:120},{x:600,y:400},{x:240,y:400},{x:240,y:680},{x:960,y:680},{x:960,y:400},{x:1320,y:400},{x:1320,y:810},{x:1480,y:810}]},
+  {name:"Abyss Gate",       short:"Abyss",   bg:"#000008",roadColor:"#000828",decorColor:"#000a30",decorType:"shrub", targetWaves:170,startGold:400,startHp:6,unlockReq:15,
+   path:[{x:-40,y:640},{x:300,y:640},{x:300,y:175},{x:660,y:175},{x:660,y:640},{x:1020,y:640},{x:1020,y:175},{x:1320,y:175},{x:1320,y:795},{x:1480,y:795}]},
+  {name:"Dragon's Spine",   short:"Dragon",  bg:"#1a0008",roadColor:"#3a0010",decorColor:"#5a0018",decorType:"rock",  targetWaves:180,startGold:450,startHp:5,unlockReq:16,
+   path:[{x:120,y:-40},{x:120,y:175},{x:660,y:175},{x:660,y:640},{x:300,y:640},{x:300,y:360},{x:960,y:360},{x:960,y:730},{x:1320,y:730},{x:1320,y:235},{x:1480,y:235}]},
+  {name:"Void Sanctum",     short:"Void",    bg:"#000000",roadColor:"#0a000a",decorColor:"#1a001a",decorType:"shrub", targetWaves:190,startGold:500,startHp:4,unlockReq:17,
+   path:[{x:-40,y:420},{x:240,y:420},{x:240,y:70},{x:600,y:70},{x:600,y:770},{x:960,y:770},{x:960,y:310},{x:1260,y:310},{x:1260,y:660},{x:1480,y:660}]},
   {name:"Final Stand",      short:"Endless", bg:"#0a0a0a",roadColor:"#1a1a1a",decorColor:"#0d2a0d",decorType:"pine",  targetWaves:Infinity,startGold:600,startHp:3,unlockReq:18,
-   path:[{x:-30,y:200},{x:300,y:200},{x:300,y:520},{x:600,y:520},{x:600,y:100},{x:900,y:100},{x:900,y:620},{x:1230,y:620}]}
+   path:[{x:-40,y:235},{x:360,y:235},{x:360,y:610},{x:720,y:610},{x:720,y:120},{x:1080,y:120},{x:1080,y:730},{x:1480,y:730}]}
 ];
 
 // ============================================================
-// TOWER DEFINITIONS (30 towers total)
+// TOWER DEFINITIONS — 36 towers across ranges/tiers
 // ============================================================
 const TOWER_TYPES = {
-  // STARTER
-  burst_cannon:{name:"Burst Cannon",emoji:"💢",cost:75,range:145,fireRate:80,damage:8,color:"#a0aec0",baseColor:"#a0aec0",
-    barrelLen:22,barrelW:8,muzzleColor:"#ffd700",towerSize:16,unlockWave:0,
-    desc:"Burst fire starter. Scales into powerhouse with upgrades.",
+  // ── TIER 1: STARTER ──
+  burst_cannon:{name:"Burst Cannon",emoji:"💢",cost:75,range:160,fireRate:80,damage:8,color:"#a0aec0",baseColor:"#a0aec0",barrelLen:22,barrelW:8,muzzleColor:"#ffd700",towerSize:16,unlockWave:0,tier:1,
+    desc:"Burst fire starter. Upgrades into a powerhouse.",
     upgrades:[
-      [{name:"Double Burst",desc:"Fire 2 shots",fn:t=>{t.multiShot=2;},cost:200},
-       {name:"Heavier Rounds",desc:"Damage +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:250},
-       {name:"Extended Mag",desc:"Fire rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:300},
-       {name:"Triple Burst",desc:"Fire 3 shots",fn:t=>{t.multiShot=3;},cost:500}],
-      [{name:"Percussive",desc:"Stun 0.4s per hit",fn:t=>{t.stunDur=24;},cost:350},
-       {name:"Incendiary",desc:"Burn 4 dmg/s",fn:t=>{t.burn=4;},cost:400},
-       {name:"Volley",desc:"Fire 5 shots + range +30%",fn:t=>{t.multiShot=5;t.rangeMult=(t.rangeMult||1)*1.3;},cost:700},
-       {name:"Gatling Mode",desc:"Rate x3, dmg x2",fn:t=>{t.rateMult=(t.rateMult||1)*0.33;t.dmgMult=(t.dmgMult||1)*2;},cost:1200}]
+      [{name:"Double Burst",desc:"Fire 2 shots",fn:t=>{t.multiShot=2;},cost:200},{name:"Heavier Rounds",desc:"Damage +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:250},{name:"Extended Mag",desc:"Fire rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:300},{name:"Triple Burst",desc:"Fire 3 shots",fn:t=>{t.multiShot=3;},cost:500}],
+      [{name:"Percussive",desc:"Stun 0.4s per hit",fn:t=>{t.stunDur=24;},cost:350},{name:"Incendiary",desc:"Burn 4 dmg/s",fn:t=>{t.burn=4;},cost:400},{name:"Volley",desc:"5 shots + range +30%",fn:t=>{t.multiShot=5;t.rangeMult=(t.rangeMult||1)*1.3;},cost:700},{name:"Gatling Mode",desc:"Rate x3, Dmg x2",fn:t=>{t.rateMult=(t.rateMult||1)*0.33;t.dmgMult=(t.dmgMult||1)*2;},cost:1200}]
     ]},
 
-  // BASIC
-  cannon:{name:"Cannon",emoji:"🟢",cost:150,range:175,fireRate:50,damage:22,color:"#a855f7",baseColor:"#a855f7",
-    barrelLen:28,barrelW:11,muzzleColor:"#ff9900",towerSize:18,unlockWave:0,
-    desc:"Reliable all-rounder. Good damage and range.",
+  cannon:{name:"Cannon",emoji:"🟢",cost:150,range:195,fireRate:50,damage:22,color:"#a855f7",baseColor:"#a855f7",barrelLen:28,barrelW:11,muzzleColor:"#ff9900",towerSize:18,unlockWave:0,tier:1,
+    desc:"Reliable all-rounder with good damage and range.",
     upgrades:[
-      [{name:"Heavy Shot",desc:"Damage +60%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.6;},cost:200},
-       {name:"Long Barrel",desc:"Range +25%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.25;},cost:200},
-       {name:"Double Fire",desc:"Rate +35%",fn:t=>{t.rateMult=(t.rateMult||1)*0.65;},cost:250},
-       {name:"Explosive Shell",desc:"AoE splash 70px",fn:t=>{t.splash=70;},cost:500}],
-      [{name:"Armor Pierce",desc:"Ignore 8 armor",fn:t=>{t.armorPierce=(t.armorPierce||0)+8;},cost:350},
-       {name:"Mega Shot",desc:"Damage +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:600},
-       {name:"Rapid Reload",desc:"Rate +60%",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;},cost:700},
-       {name:"Hellfire",desc:"Burn 5+AoE80",fn:t=>{t.burn=5;t.splash=80;},cost:1200}]
+      [{name:"Heavy Shot",desc:"Damage +60%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.6;},cost:200},{name:"Long Barrel",desc:"Range +25%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.25;},cost:200},{name:"Double Fire",desc:"Rate +35%",fn:t=>{t.rateMult=(t.rateMult||1)*0.65;},cost:250},{name:"Explosive Shell",desc:"AoE splash 70px",fn:t=>{t.splash=70;},cost:500}],
+      [{name:"Armor Pierce",desc:"Ignore 8 armor",fn:t=>{t.armorPierce=(t.armorPierce||0)+8;},cost:350},{name:"Mega Shot",desc:"Damage +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:600},{name:"Rapid Reload",desc:"Rate +60%",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;},cost:700},{name:"Hellfire",desc:"Burn 5 + AoE 80px",fn:t=>{t.burn=5;t.splash=80;},cost:1200}]
     ]},
 
-  frost:{name:"Frost",emoji:"❄️",cost:250,range:155,fireRate:38,damage:8,color:"#06b6d4",baseColor:"#06b6d4",
-    barrelLen:22,barrelW:8,muzzleColor:"#93c5fd",towerSize:17,unlockWave:0,isFrost:true,
+  frost:{name:"Frost",emoji:"❄️",cost:250,range:175,fireRate:38,damage:8,color:"#06b6d4",baseColor:"#06b6d4",barrelLen:22,barrelW:8,muzzleColor:"#93c5fd",towerSize:17,unlockWave:0,tier:1,isFrost:true,
     desc:"Slows enemies. Essential support tower.",
     upgrades:[
-      [{name:"Deep Freeze",desc:"Slow to 25%",fn:t=>{t.slowPower=0.25;},cost:250},
-       {name:"Wide Chill",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:250},
-       {name:"Ice Shard",desc:"Damage +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:300},
-       {name:"Blizzard",desc:"AoE 90px slow",fn:t=>{t.frostAoE=90;},cost:500}],
-      [{name:"Permafrost",desc:"Slow 20s",fn:t=>{t.slowDuration=1200;},cost:450},
-       {name:"Cryo Burst",desc:"AoE +120px",fn:t=>{t.frostAoE=(t.frostAoE||0)+120;},cost:500},
-       {name:"Arctic Storm",desc:"Global chill all",fn:t=>{t.globalChill=true;},cost:1000},
-       {name:"Ice Shield",desc:"Slowed take +30% dmg",fn:t=>{t.chillVuln=true;},cost:900}]
+      [{name:"Deep Freeze",desc:"Slow to 25%",fn:t=>{t.slowPower=0.25;},cost:250},{name:"Wide Chill",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:250},{name:"Ice Shard",desc:"Damage +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:300},{name:"Blizzard",desc:"AoE 90px slow",fn:t=>{t.frostAoE=90;},cost:500}],
+      [{name:"Permafrost",desc:"Slow lasts 20s",fn:t=>{t.slowDuration=1200;},cost:450},{name:"Cryo Burst",desc:"AoE +120px",fn:t=>{t.frostAoE=(t.frostAoE||0)+120;},cost:500},{name:"Arctic Storm",desc:"Global chill all",fn:t=>{t.globalChill=true;},cost:1000},{name:"Ice Shield",desc:"Slowed take +30% dmg",fn:t=>{t.chillVuln=true;},cost:900}]
     ]},
 
-  sniper:{name:"Sniper",emoji:"🎯",cost:300,range:400,fireRate:115,damage:100,color:"#f97316",baseColor:"#f97316",
-    barrelLen:42,barrelW:6,muzzleColor:"#fde047",towerSize:17,unlockWave:0,
+  sniper:{name:"Sniper",emoji:"🎯",cost:300,range:450,fireRate:115,damage:100,color:"#f97316",baseColor:"#f97316",barrelLen:44,barrelW:6,muzzleColor:"#fde047",towerSize:17,unlockWave:0,tier:1,
     desc:"Extreme range. Picks off high-value targets.",
     upgrades:[
-      [{name:"Anti-Tank",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:300},
-       {name:"Eagle Eye",desc:"Range +45%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.45;},cost:300},
-       {name:"Quick Scope",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:350},
-       {name:"Headshot",desc:"15% insta-kill",fn:t=>{t.headshot=0.15;},cost:750}],
-      [{name:"AP Rounds",desc:"Ignore 18 armor",fn:t=>{t.armorPierce=(t.armorPierce||0)+18;},cost:500},
-       {name:"Explosive Tip",desc:"Splash 60px",fn:t=>{t.splash=60;},cost:500},
-       {name:"Death Mark",desc:"+50% dmg on target",fn:t=>{t.deathMark=true;},cost:900},
-       {name:"Final Shot",desc:"Damage x4.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*4.5;},cost:1500}]
+      [{name:"Anti-Tank",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:300},{name:"Eagle Eye",desc:"Range +45%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.45;},cost:300},{name:"Quick Scope",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:350},{name:"Headshot",desc:"15% instakill",fn:t=>{t.headshot=0.15;},cost:750}],
+      [{name:"AP Rounds",desc:"Ignore 18 armor",fn:t=>{t.armorPierce=(t.armorPierce||0)+18;},cost:500},{name:"Explosive Tip",desc:"Splash 60px",fn:t=>{t.splash=60;},cost:500},{name:"Death Mark",desc:"+50% dmg on target",fn:t=>{t.deathMark=true;},cost:900},{name:"Final Shot",desc:"Damage x4.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*4.5;},cost:1500}]
     ]},
 
-  minigun:{name:"Minigun",emoji:"🔥",cost:450,range:165,fireRate:7,damage:10,color:"#10b981",baseColor:"#10b981",
-    barrelLen:26,barrelW:9,muzzleColor:"#f59e0b",towerSize:19,unlockWave:0,
-    desc:"Shreds enemies with rapid fire. Weak vs armor.",
+  minigun:{name:"Minigun",emoji:"🔥",cost:450,range:185,fireRate:7,damage:10,color:"#10b981",baseColor:"#10b981",barrelLen:26,barrelW:9,muzzleColor:"#f59e0b",towerSize:19,unlockWave:0,tier:1,
+    desc:"Shreds enemies with rapid fire.",
     upgrades:[
-      [{name:"Overdrive",desc:"Rate +55%",fn:t=>{t.rateMult=(t.rateMult||1)*0.45;},cost:350},
-       {name:"Heavy Caliber",desc:"Damage +70%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.7;},cost:350},
-       {name:"Tracer Rounds",desc:"Range +30%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.3;},cost:300},
-       {name:"Burn Ammo",desc:"Burn 3 dmg/s",fn:t=>{t.burn=3;},cost:500}],
-      [{name:"Dual Barrel",desc:"Fire 2 shots/tick",fn:t=>{t.multiShot=2;},cost:700},
-       {name:"Rage Mode",desc:"Dmg x2 over time",fn:t=>{t.rage=true;},cost:900},
-       {name:"Shredder",desc:"Armor -8 per hit",fn:t=>{t.armorShred=8;},cost:700},
-       {name:"Apocalypse",desc:"Rate x2.5, Dmg x2.5",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;t.dmgMult=(t.dmgMult||1)*2.5;},cost:2000}]
+      [{name:"Overdrive",desc:"Rate +55%",fn:t=>{t.rateMult=(t.rateMult||1)*0.45;},cost:350},{name:"Heavy Caliber",desc:"Damage +70%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.7;},cost:350},{name:"Tracer Rounds",desc:"Range +30%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.3;},cost:300},{name:"Burn Ammo",desc:"Burn 3 dmg/s",fn:t=>{t.burn=3;},cost:500}],
+      [{name:"Dual Barrel",desc:"Fire 2 shots/tick",fn:t=>{t.multiShot=2;},cost:700},{name:"Rage Mode",desc:"Dmg x2 over time",fn:t=>{t.rage=true;},cost:900},{name:"Shredder",desc:"Armor -8 per hit",fn:t=>{t.armorShred=8;},cost:700},{name:"Apocalypse",desc:"Rate x2.5, Dmg x2.5",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;t.dmgMult=(t.dmgMult||1)*2.5;},cost:2000}]
     ]},
 
-  // MID TIER (unlock via waves)
-  tesla:{name:"Tesla",emoji:"⚡",cost:1000,range:220,fireRate:48,damage:45,color:"#c084fc",baseColor:"#c084fc",
-    barrelLen:18,barrelW:12,muzzleColor:"#e9d5ff",towerSize:20,unlockWave:5,isTesla:true,chainCount:5,
-    desc:"Zaps chain lightning. Hits up to 5 enemies.",
+  // ── TIER 2: EARLY MID ──
+  gold_mine:{name:"Gold Mine",emoji:"💎",cost:350,range:220,fireRate:1,damage:0,color:"#fbbf24",baseColor:"#fbbf24",barrelLen:14,barrelW:14,muzzleColor:"#fef08a",towerSize:20,unlockWave:3,tier:2,isBarrier:true,isGoldMine:true,
+    desc:"Earns gold per kill nearby. Passive income.",
     upgrades:[
-      [{name:"Overcharge",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:500},
-       {name:"Long Arc",desc:"Chain range +60px",fn:t=>{t.chainRange=(t.chainRange||110)+60;},cost:450},
-       {name:"Extra Chain",desc:"+3 chain targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+3;},cost:600},
-       {name:"Stun",desc:"0.6s stun on hit",fn:t=>{t.stunDur=36;},cost:800}],
-      [{name:"Megavolt",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1000},
-       {name:"Storm",desc:"Chain 12 targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+7;},cost:1200},
-       {name:"EMP Pulse",desc:"Slow hit enemies 4s",fn:t=>{t.empSlow=true;},cost:900},
-       {name:"God Bolt",desc:"Full map chain",fn:t=>{t.globalChain=true;},cost:2500}]
+      [{name:"Rich Vein",desc:"+$8 per kill",fn:t=>{t.goldAura=8;},cost:400},{name:"Wide Radius",desc:"Range +60%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.6;},cost:500},{name:"Efficiency",desc:"Gain bonus score",fn:t=>{t.goldBoostScore=true;},cost:400},{name:"Gem Cluster",desc:"+$20 per kill",fn:t=>{t.goldAura=20;},cost:1200}],
+      [{name:"Diamond",desc:"+$50 per kill",fn:t=>{t.goldAura=50;},cost:3000},{name:"Global Mine",desc:"Bonus everywhere",fn:t=>{t.goldAuraGlobal=true;},cost:4000},{name:"Interest",desc:"+1% gold/wave",fn:t=>{t.goldInterest=true;},cost:3500},{name:"Fortune",desc:"+$100 per kill global",fn:t=>{t.goldAura=100;t.goldAuraGlobal=true;},cost:10000}]
     ]},
 
-  laser:{name:"Laser",emoji:"🔴",cost:650,range:220,fireRate:1,damage:2.8,color:"#ef4444",baseColor:"#ef4444",
-    barrelLen:24,barrelW:6,muzzleColor:"#fca5a5",towerSize:18,unlockWave:8,isLaser:true,
-    desc:"Continuous beam. Melts through anything.",
+  barrier:{name:"Barrier",emoji:"🛡️",cost:500,range:130,fireRate:1,damage:0,color:"#64748b",baseColor:"#64748b",barrelLen:14,barrelW:18,muzzleColor:"#94a3b8",towerSize:20,unlockWave:4,tier:2,isBarrier:true,
+    desc:"Slows all enemies in range. Pure support.",
     upgrades:[
-      [{name:"Focused",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:450},
-       {name:"Extended",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:450},
-       {name:"UV Burn",desc:"Burn 7 dmg/s",fn:t=>{t.burn=7;},cost:500},
-       {name:"Wide Beam",desc:"Hit 4px wide",fn:t=>{t.laserWidth=4;},cost:600}],
-      [{name:"Death Ray",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1200},
-       {name:"Scatter",desc:"Bounces 3 targets",fn:t=>{t.laserBounce=3;},cost:1000},
-       {name:"Sear",desc:"Armor -5 per tick",fn:t=>{t.armorShred=5;},cost:900},
-       {name:"Solar Cannon",desc:"x6 dmg x2.5 range",fn:t=>{t.dmgMult=(t.dmgMult||1)*6;t.rangeMult=(t.rangeMult||1)*2.5;},cost:3000}]
+      [{name:"Thick Wall",desc:"Slow to 40%",fn:t=>{t.barrierSlow=0.4;},cost:400},{name:"Wide",desc:"Range +45%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.45;},cost:400},{name:"Electric",desc:"8 dmg/s in range",fn:t=>{t.barrierDmg=8;},cost:500},{name:"Web",desc:"Slow to 20%",fn:t=>{t.barrierSlow=0.2;},cost:700}],
+      [{name:"Fortress",desc:"Full stop 2s",fn:t=>{t.barrierStun=120;},cost:1500},{name:"Energy Field",desc:"40 dmg/s in range",fn:t=>{t.barrierDmg=40;},cost:2000},{name:"Time Stop",desc:"Freeze ring 3s",fn:t=>{t.timeStop=true;},cost:2500},{name:"Omega Wall",desc:"Instakill in zone",fn:t=>{t.barrierKill=true;},cost:6000}]
     ]},
 
-  plasma:{name:"Plasma",emoji:"💥",cost:1200,range:250,fireRate:240,damage:320,color:"#ff4500",baseColor:"#ff4500",
-    barrelLen:34,barrelW:14,muzzleColor:"#f97316",towerSize:22,unlockWave:10,isPlasma:true,splashR:180,
-    desc:"Massive AoE artillery. Devastating vs hordes.",
+  tesla:{name:"Tesla",emoji:"⚡",cost:1000,range:240,fireRate:48,damage:45,color:"#c084fc",baseColor:"#c084fc",barrelLen:18,barrelW:12,muzzleColor:"#e9d5ff",towerSize:20,unlockWave:5,tier:2,isTesla:true,chainCount:5,
+    desc:"Chain lightning hitting up to 5 enemies.",
     upgrades:[
-      [{name:"Mega Warhead",desc:"Damage +70%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.7;},cost:700},
-       {name:"Wide Arc",desc:"Splash +60px",fn:t=>{t.splashMult=(t.splashMult||1)*1.35;},cost:650},
-       {name:"Rapid Fire",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:600},
-       {name:"Napalm",desc:"Burn 10 dmg/s",fn:t=>{t.burn=10;},cost:900}],
-      [{name:"Nuke Shell",desc:"Dmg x2.5, Splash x2",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.5;t.splashMult=(t.splashMult||1)*2;},cost:2000},
-       {name:"Carpet Bomb",desc:"Fire 3 shells/volley",fn:t=>{t.multiShot=3;},cost:1800},
-       {name:"EMP Blast",desc:"Slow all in AoE 5s",fn:t=>{t.empSlow=true;},cost:1500},
-       {name:"Doomsday",desc:"Dmg x5 full map",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;t.splashMult=999;},cost:5000}]
+      [{name:"Overcharge",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:500},{name:"Long Arc",desc:"Chain range +60px",fn:t=>{t.chainRange=(t.chainRange||120)+60;},cost:450},{name:"Extra Chain",desc:"+3 targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+3;},cost:600},{name:"Stun",desc:"0.6s stun on hit",fn:t=>{t.stunDur=36;},cost:800}],
+      [{name:"Megavolt",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1000},{name:"Storm",desc:"Chain 12 targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+7;},cost:1200},{name:"EMP Pulse",desc:"Slow hit enemies 4s",fn:t=>{t.empSlow=true;},cost:900},{name:"God Bolt",desc:"Full map chain",fn:t=>{t.globalChain=true;},cost:2500}]
     ]},
 
-  railgun:{name:"Railgun",emoji:"🔷",cost:900,range:480,fireRate:170,damage:380,color:"#3b82f6",baseColor:"#3b82f6",
-    barrelLen:44,barrelW:7,muzzleColor:"#93c5fd",towerSize:19,unlockWave:12,isRailgun:true,
-    desc:"Pierces ALL enemies in a straight line.",
-    upgrades:[
-      [{name:"Penetrator",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:600},
-       {name:"Rail Ext",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:600},
-       {name:"Gauss",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:700},
-       {name:"Shockwave",desc:"Splash 50px per hit",fn:t=>{t.splash=50;},cost:800}],
-      [{name:"Annihilator",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1800},
-       {name:"Rapid Rail",desc:"Rate x2.5",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;},cost:1600},
-       {name:"Triple Rail",desc:"Fire 3 parallel rails",fn:t=>{t.multiRail=3;},cost:2000},
-       {name:"Godgun",desc:"Execute <50% HP",fn:t=>{t.executeThresh=0.5;},cost:3500}]
-    ]},
-
-  mortar:{name:"Mortar",emoji:"🔶",cost:700,range:320,fireRate:190,damage:170,color:"#d97706",baseColor:"#d97706",
-    barrelLen:20,barrelW:15,muzzleColor:"#fbbf24",towerSize:20,unlockWave:7,isMortar:true,splashR:110,
-    desc:"Indirect fire. Can't target nearby enemies.",
-    upgrades:[
-      [{name:"Heavy Shell",desc:"Damage +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:500},
-       {name:"Wide Blast",desc:"Splash +50px",fn:t=>{t.splashMult=(t.splashMult||1)*1.5;},cost:450},
-       {name:"Rapid Fire",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:550},
-       {name:"Incendiary",desc:"Burn 8 dmg/s",fn:t=>{t.burn=8;},cost:650}],
-      [{name:"Cluster",desc:"Fire 5 bomblets",fn:t=>{t.multiShot=5;},cost:1500},
-       {name:"MIRV",desc:"Each splits 3",fn:t=>{t.mirv=true;},cost:2000},
-       {name:"Mega Mortar",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:2200},
-       {name:"Obliterate",desc:"x6 dmg 250px splash",fn:t=>{t.dmgMult=(t.dmgMult||1)*6;t.splashMult=(t.splashMult||1)*2.5;},cost:5000}]
-    ]},
-
-  multi_mortar:{name:"Multi-Mortar",emoji:"🔥🔶",cost:1400,range:360,fireRate:280,damage:200,color:"#b45309",baseColor:"#b45309",
-    barrelLen:18,barrelW:17,muzzleColor:"#fcd34d",towerSize:24,unlockWave:15,isMortar:true,splashR:130,isMultiMortar:true,
-    desc:"Burst mortar: slow projectile, huge splash, massive range. Devastating but sluggish.",
-    upgrades:[
-      [{name:"Barrage",desc:"Fire 3 shells per burst",fn:t=>{t.multiShot=3;},cost:800},
-       {name:"Earthquake",desc:"Splash +80px",fn:t=>{t.splashMult=(t.splashMult||1)*1.6;},cost:700},
-       {name:"Titan Shell",desc:"Damage +100%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2;},cost:900},
-       {name:"Incendiary",desc:"Burn 12 dmg/s",fn:t=>{t.burn=12;},cost:1000}],
-      [{name:"Quintuple Fire",desc:"5 shells per burst",fn:t=>{t.multiShot=5;},cost:2500},
-       {name:"Shockwave",desc:"Stun 1.5s in splash",fn:t=>{t.stunDur=90;},cost:2000},
-       {name:"Doom Volley",desc:"Damage x4",fn:t=>{t.dmgMult=(t.dmgMult||1)*4;},cost:3000},
-       {name:"Cataclysm",desc:"Full map AoE x8 dmg",fn:t=>{t.splashMult=999;t.dmgMult=(t.dmgMult||1)*8;},cost:8000}]
-    ]},
-
-  flamethrower:{name:"Flamer",emoji:"🌋",cost:850,range:155,fireRate:3,damage:5,color:"#ea580c",baseColor:"#ea580c",
-    barrelLen:28,barrelW:12,muzzleColor:"#fb923c",towerSize:20,unlockWave:9,isFlame:true,
-    desc:"Short range but burns everything. Huge DPS.",
-    upgrades:[
-      [{name:"Hellfire",desc:"Damage +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:600},
-       {name:"Long Nozzle",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:550},
-       {name:"Rapid",desc:"Rate +55%",fn:t=>{t.rateMult=(t.rateMult||1)*0.45;},cost:600},
-       {name:"Napalm",desc:"Burn 12 dmg/s",fn:t=>{t.burn=12;},cost:750}],
-      [{name:"Inferno",desc:"Damage x4.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*4.5;},cost:1800},
-       {name:"Wide Spray",desc:"90° cone",fn:t=>{t.flameCone=true;},cost:1500},
-       {name:"Fire Field",desc:"Leave fire patches",fn:t=>{t.fireField=true;},cost:1800},
-       {name:"Armageddon",desc:"Full screen fire",fn:t=>{t.rangeMult=999;t.flameCone=true;},cost:5000}]
-    ]},
-
-  poison:{name:"Poison",emoji:"☠️",cost:550,range:195,fireRate:75,damage:4,color:"#84cc16",baseColor:"#84cc16",
-    barrelLen:20,barrelW:9,muzzleColor:"#a3e635",towerSize:17,unlockWave:6,isPoison:true,
+  poison:{name:"Poison",emoji:"☠️",cost:550,range:215,fireRate:75,damage:4,color:"#84cc16",baseColor:"#84cc16",barrelLen:20,barrelW:9,muzzleColor:"#a3e635",towerSize:17,unlockWave:6,tier:2,isPoison:true,
     desc:"Poisons enemies. DoT ignores armor.",
     upgrades:[
-      [{name:"Toxin+",desc:"Poison x2.2",fn:t=>{t.poisonMult=(t.poisonMult||1)*2.2;},cost:400},
-       {name:"Wide Spray",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:350},
-       {name:"Fast Spit",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:400},
-       {name:"Infect",desc:"Spreads 70px",fn:t=>{t.infectSpread=70;},cost:600}],
-      [{name:"Plague",desc:"Poison x5",fn:t=>{t.poisonMult=(t.poisonMult||1)*5;},cost:1200},
-       {name:"Death Cloud",desc:"AoE 120px",fn:t=>{t.poisonAoE=120;},cost:1000},
-       {name:"Virulent",desc:"Spread on kill",fn:t=>{t.viralPoison=true;},cost:1500},
-       {name:"Pandemic",desc:"All enemies poisoned",fn:t=>{t.globalPoison=true;},cost:3500}]
+      [{name:"Toxin+",desc:"Poison x2.2",fn:t=>{t.poisonMult=(t.poisonMult||1)*2.2;},cost:400},{name:"Wide Spray",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:350},{name:"Fast Spit",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:400},{name:"Infect",desc:"Spreads 70px",fn:t=>{t.infectSpread=70;},cost:600}],
+      [{name:"Plague",desc:"Poison x5",fn:t=>{t.poisonMult=(t.poisonMult||1)*5;},cost:1200},{name:"Death Cloud",desc:"AoE 120px",fn:t=>{t.poisonAoE=120;},cost:1000},{name:"Virulent",desc:"Spread on kill",fn:t=>{t.viralPoison=true;},cost:1500},{name:"Pandemic",desc:"All enemies poisoned",fn:t=>{t.globalPoison=true;},cost:3500}]
     ]},
 
-  shockwave:{name:"Shockwave",emoji:"🌀",cost:1500,range:240,fireRate:210,damage:100,color:"#8b5cf6",baseColor:"#8b5cf6",
-    barrelLen:18,barrelW:17,muzzleColor:"#c4b5fd",towerSize:22,unlockWave:14,isShockwave:true,splashR:210,
-    desc:"Ground pound. Launches enemies backward.",
-    upgrades:[
-      [{name:"Impact+",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:900},
-       {name:"Wider",desc:"Radius +70px",fn:t=>{t.splashMult=(t.splashMult||1)*1.35;},cost:800},
-       {name:"Rapid",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:850},
-       {name:"Stun",desc:"1.2s stun in radius",fn:t=>{t.stunDur=72;},cost:1200}],
-      [{name:"Titan",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:2500},
-       {name:"Global Quake",desc:"Full screen",fn:t=>{t.splashMult=999;},cost:3000},
-       {name:"Chain Wave",desc:"3 waves per strike",fn:t=>{t.chainWaves=3;},cost:2500},
-       {name:"Apocalypse",desc:"Dmg x7, Rate x2",fn:t=>{t.dmgMult=(t.dmgMult||1)*7;t.rateMult=(t.rateMult||1)*0.5;},cost:7000}]
-    ]},
-
-  missile:{name:"Missile",emoji:"🚀",cost:1000,range:340,fireRate:130,damage:240,color:"#6366f1",baseColor:"#6366f1",
-    barrelLen:34,barrelW:10,muzzleColor:"#a5b4fc",towerSize:20,unlockWave:11,isMissile:true,splashR:90,
-    desc:"Homing missiles. Tracks and destroys targets.",
-    upgrades:[
-      [{name:"Warhead+",desc:"Damage +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:700},
-       {name:"Long Range",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:650},
-       {name:"Quick Launch",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:750},
-       {name:"Cluster",desc:"Splits into 4",fn:t=>{t.multiShot=4;},cost:1000}],
-      [{name:"ICBM",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:2000},
-       {name:"Nuke Tip",desc:"Splash x3.5",fn:t=>{t.splashMult=(t.splashMult||1)*3.5;},cost:2000},
-       {name:"Barrage",desc:"Fire 6 at once",fn:t=>{t.multiShot=6;},cost:2500},
-       {name:"Apocalypse",desc:"x6 dmg, 400px splash",fn:t=>{t.dmgMult=(t.dmgMult||1)*6;t.splashMult=999;},cost:6000}]
-    ]},
-
-  antiair:{name:"Anti-Air",emoji:"🌟",cost:750,range:270,fireRate:55,damage:65,color:"#06b6d4",baseColor:"#06b6d4",
-    barrelLen:32,barrelW:7,muzzleColor:"#67e8f9",towerSize:18,unlockWave:6,isAntiAir:true,
+  antiair:{name:"Anti-Air",emoji:"🌟",cost:750,range:300,fireRate:55,damage:65,color:"#06b6d4",baseColor:"#06b6d4",barrelLen:34,barrelW:7,muzzleColor:"#67e8f9",towerSize:18,unlockWave:6,tier:2,isAntiAir:true,
     desc:"Multi-burst flak. Slows and damages swarms.",
     upgrades:[
-      [{name:"Rapid Flak",desc:"Rate +55%",fn:t=>{t.rateMult=(t.rateMult||1)*0.45;},cost:500},
-       {name:"Long Range",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:450},
-       {name:"Heavy Flak",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:550},
-       {name:"Burst",desc:"3 shots/cycle",fn:t=>{t.multiShot=3;},cost:700}],
-      [{name:"Barrage",desc:"6 shots",fn:t=>{t.multiShot=6;},cost:1500},
-       {name:"Homing",desc:"Track fastest",fn:t=>{t.homingFlak=true;},cost:1200},
-       {name:"Devastator",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1800},
-       {name:"Sky God",desc:"Dmg x5, x2 shots",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;t.multiShot=(t.multiShot||1)*2;},cost:5000}]
+      [{name:"Rapid Flak",desc:"Rate +55%",fn:t=>{t.rateMult=(t.rateMult||1)*0.45;},cost:500},{name:"Long Range",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:450},{name:"Heavy Flak",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:550},{name:"Burst",desc:"3 shots/cycle",fn:t=>{t.multiShot=3;},cost:700}],
+      [{name:"Barrage",desc:"6 shots",fn:t=>{t.multiShot=6;},cost:1500},{name:"Homing",desc:"Track fastest",fn:t=>{t.homingFlak=true;},cost:1200},{name:"Devastator",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1800},{name:"Sky God",desc:"Dmg x5, x2 shots",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;t.multiShot=(t.multiShot||1)*2;},cost:5000}]
     ]},
 
-  barrier:{name:"Barrier",emoji:"🛡️",cost:500,range:115,fireRate:1,damage:0,color:"#64748b",baseColor:"#64748b",
-    barrelLen:14,barrelW:18,muzzleColor:"#94a3b8",towerSize:20,unlockWave:4,isBarrier:true,
-    desc:"Slows all enemies in range. Support only.",
+  laser:{name:"Laser",emoji:"🔴",cost:650,range:245,fireRate:1,damage:2.8,color:"#ef4444",baseColor:"#ef4444",barrelLen:24,barrelW:6,muzzleColor:"#fca5a5",towerSize:18,unlockWave:8,tier:2,isLaser:true,
+    desc:"Continuous beam. Melts through anything.",
     upgrades:[
-      [{name:"Thick Wall",desc:"Slow to 40%",fn:t=>{t.barrierSlow=0.4;},cost:400},
-       {name:"Wide",desc:"Range +45%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.45;},cost:400},
-       {name:"Electric",desc:"8 dmg/s in range",fn:t=>{t.barrierDmg=8;},cost:500},
-       {name:"Web",desc:"Slow to 20%",fn:t=>{t.barrierSlow=0.2;},cost:700}],
-      [{name:"Fortress",desc:"Full stop 2s",fn:t=>{t.barrierStun=120;},cost:1500},
-       {name:"Energy Field",desc:"40 dmg/s in range",fn:t=>{t.barrierDmg=40;},cost:2000},
-       {name:"Time Stop",desc:"Freeze ring 3s",fn:t=>{t.timeStop=true;},cost:2500},
-       {name:"Omega Wall",desc:"Insta-kill in zone",fn:t=>{t.barrierKill=true;},cost:6000}]
+      [{name:"Focused",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:450},{name:"Extended",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:450},{name:"UV Burn",desc:"Burn 7 dmg/s",fn:t=>{t.burn=7;},cost:500},{name:"Wide Beam",desc:"Hit wider",fn:t=>{t.laserWidth=4;},cost:600}],
+      [{name:"Death Ray",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1200},{name:"Scatter",desc:"Bounces 3 targets",fn:t=>{t.laserBounce=3;},cost:1000},{name:"Sear",desc:"Armor -5 per tick",fn:t=>{t.armorShred=5;},cost:900},{name:"Solar Cannon",desc:"x6 dmg, x2.5 range",fn:t=>{t.dmgMult=(t.dmgMult||1)*6;t.rangeMult=(t.rangeMult||1)*2.5;},cost:3000}]
     ]},
 
-  oracle:{name:"Oracle",emoji:"👁️",cost:3000,range:340,fireRate:1,damage:0,color:"#fbbf24",baseColor:"#fbbf24",
-    barrelLen:16,barrelW:16,muzzleColor:"#fde68a",towerSize:20,unlockWave:18,isOracle:true,
-    desc:"Reveals weak points. All towers +30% dmg in range.",
+  flamethrower:{name:"Flamer",emoji:"🌋",cost:850,range:175,fireRate:3,damage:5,color:"#ea580c",baseColor:"#ea580c",barrelLen:28,barrelW:12,muzzleColor:"#fb923c",towerSize:20,unlockWave:9,tier:2,isFlame:true,
+    desc:"Short range but burns everything. Massive DPS.",
     upgrades:[
-      [{name:"Far Sight",desc:"Aura +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:1500},
-       {name:"Insight",desc:"Aura +60% dmg",fn:t=>{t.auraMult=(t.auraMult||1.3)*1.5;},cost:2000},
-       {name:"Haste",desc:"Aura +30% rate",fn:t=>{t.auraRate=true;},cost:1800},
-       {name:"Gold Eye",desc:"+$5 per kill",fn:t=>{t.goldAura=5;},cost:2500}],
-      [{name:"All-Seeing",desc:"Aura dmg x3",fn:t=>{t.auraMult=(t.auraMult||1.3)*2.2;},cost:4000},
-       {name:"Omniscient",desc:"Global aura",fn:t=>{t.globalAura=true;},cost:6000},
-       {name:"Fortune",desc:"+$15 per kill",fn:t=>{t.goldAura=15;t.goldAuraGlobal=true;},cost:7000},
-       {name:"GOD EYE",desc:"All stats x3 global",fn:t=>{t.godEye=true;},cost:15000}]
+      [{name:"Hellfire",desc:"Damage +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:600},{name:"Long Nozzle",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:550},{name:"Rapid",desc:"Rate +55%",fn:t=>{t.rateMult=(t.rateMult||1)*0.45;},cost:600},{name:"Napalm",desc:"Burn 12 dmg/s",fn:t=>{t.burn=12;},cost:750}],
+      [{name:"Inferno",desc:"Damage x4.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*4.5;},cost:1800},{name:"Wide Spray",desc:"90° cone",fn:t=>{t.flameCone=true;},cost:1500},{name:"Fire Field",desc:"Leave fire patches",fn:t=>{t.fireField=true;},cost:1800},{name:"Armageddon",desc:"Full screen fire",fn:t=>{t.rangeMult=999;t.flameCone=true;},cost:5000}]
     ]},
 
-  nuke:{name:"Nuke Silo",emoji:"☢️",cost:12000,range:600,fireRate:700,damage:5000,color:"#ef4444",baseColor:"#ef4444",
-    barrelLen:18,barrelW:18,muzzleColor:"#fca5a5",towerSize:30,unlockWave:25,isNuke:true,splashR:400,
-    desc:"ULTIMATE WEAPON. Massive delay, screen-clearing devastation.",
+  mortar:{name:"Mortar",emoji:"🔶",cost:700,range:360,fireRate:190,damage:170,color:"#d97706",baseColor:"#d97706",barrelLen:20,barrelW:15,muzzleColor:"#fbbf24",towerSize:20,unlockWave:7,tier:2,isMortar:true,splashR:120,
+    desc:"Indirect fire artillery. Can't target nearby enemies.",
     upgrades:[
-      [{name:"Yield+",desc:"Damage +60%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.6;},cost:3000},
-       {name:"MIRV",desc:"Fire 5 warheads",fn:t=>{t.multiShot=5;},cost:4000},
-       {name:"Rapid",desc:"Rate +35%",fn:t=>{t.rateMult=(t.rateMult||1)*0.65;},cost:3500},
-       {name:"EMP",desc:"Stun all 12s post blast",fn:t=>{t.stunDur=720;},cost:5000}],
-      [{name:"Tsar Bomba",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:9000},
-       {name:"Omega Nuke",desc:"Full-screen always",fn:t=>{t.splashMult=999;},cost:12000},
-       {name:"Carpet",desc:"5 warheads fast",fn:t=>{t.multiShot=5;t.rateMult=(t.rateMult||1)*0.5;},cost:10000},
-       {name:"APOCALYPSE",desc:"Kills everything",fn:t=>{t.dmgMult=(t.dmgMult||1)*100;},cost:30000}]
+      [{name:"Heavy Shell",desc:"Damage +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:500},{name:"Wide Blast",desc:"Splash +50px",fn:t=>{t.splashMult=(t.splashMult||1)*1.5;},cost:450},{name:"Rapid Fire",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:550},{name:"Incendiary",desc:"Burn 8 dmg/s",fn:t=>{t.burn=8;},cost:650}],
+      [{name:"Cluster",desc:"Fire 5 bomblets",fn:t=>{t.multiShot=5;},cost:1500},{name:"MIRV",desc:"Each splits 3",fn:t=>{t.mirv=true;},cost:2000},{name:"Mega Mortar",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:2200},{name:"Obliterate",desc:"x6 dmg, 250px splash",fn:t=>{t.dmgMult=(t.dmgMult||1)*6;t.splashMult=(t.splashMult||1)*2.5;},cost:5000}]
     ]},
 
-  // NEW TOWERS
-  gatling:{name:"Gatling",emoji:"🌀",cost:2000,range:190,fireRate:3,damage:18,color:"#16a34a",baseColor:"#16a34a",
-    barrelLen:30,barrelW:10,muzzleColor:"#4ade80",towerSize:22,unlockWave:16,
-    desc:"Ultra-rapid fire. Destroys swarms instantly.",
+  poison_rain:{name:"Acid Rain",emoji:"🌧️",cost:900,range:310,fireRate:120,damage:15,color:"#65a30d",baseColor:"#65a30d",barrelLen:22,barrelW:11,muzzleColor:"#a3e635",towerSize:19,unlockWave:10,tier:2,isPoison:true,splashR:90,
+    desc:"Rains acid AoE. Poisons groups on every shot.",
     upgrades:[
-      [{name:"Spooled Up",desc:"Rate +70%",fn:t=>{t.rateMult=(t.rateMult||1)*0.3;},cost:800},
-       {name:"Massive Caliber",desc:"Dmg +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:900},
-       {name:"Extended Range",desc:"Range +30%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.3;},cost:700},
-       {name:"Incendiary",desc:"Burn 5 dmg/s",fn:t=>{t.burn=5;},cost:1000}],
-      [{name:"Six Barrels",desc:"Fire 6 shots/tick",fn:t=>{t.multiShot=6;},cost:3000},
-       {name:"Demon Mode",desc:"Rate x4 Dmg x3",fn:t=>{t.rateMult=(t.rateMult||1)*0.25;t.dmgMult=(t.dmgMult||1)*3;},cost:5000},
-       {name:"Armor Melt",desc:"Armor -15 per hit",fn:t=>{t.armorShred=15;},cost:2500},
-       {name:"Obliterator",desc:"Everything dies",fn:t=>{t.dmgMult=(t.dmgMult||1)*8;t.rateMult=(t.rateMult||1)*0.2;},cost:10000}]
+      [{name:"Acid Flood",desc:"AoE +60px",fn:t=>{t.splashMult=(t.splashMult||1)*1.75;},cost:600},{name:"Concentrated",desc:"Poison x3",fn:t=>{t.poisonMult=(t.poisonMult||1)*3;},cost:700},{name:"Rapid Drop",desc:"Rate +50%",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:600},{name:"Corrosive",desc:"Armor -10 per hit",fn:t=>{t.armorShred=10;},cost:800}],
+      [{name:"Chemical Rain",desc:"Full screen rain",fn:t=>{t.splashMult=999;},cost:3000},{name:"Plague Cloud",desc:"Poison x8",fn:t=>{t.poisonMult=(t.poisonMult||1)*8;},cost:3500},{name:"Melting",desc:"Armor to 0",fn:t=>{t.armorShred=100;},cost:4000},{name:"Extinction",desc:"Pandemic + x10 poison",fn:t=>{t.globalPoison=true;t.poisonMult=(t.poisonMult||1)*10;},cost:9000}]
     ]},
 
-  chain_lightning:{name:"Chain Storm",emoji:"⛈️",cost:1800,range:260,fireRate:55,damage:60,color:"#7dd3fc",baseColor:"#7dd3fc",
-    barrelLen:22,barrelW:10,muzzleColor:"#bae6fd",towerSize:21,unlockWave:13,isTesla:true,chainCount:8,
-    desc:"Like Tesla, but built for massive chains. Hits 8+ enemies.",
+  // ── TIER 3: MID RANGE ──
+  missile:{name:"Missile",emoji:"🚀",cost:1000,range:380,fireRate:130,damage:240,color:"#6366f1",baseColor:"#6366f1",barrelLen:34,barrelW:10,muzzleColor:"#a5b4fc",towerSize:20,unlockWave:11,tier:3,isMissile:true,splashR:100,
+    desc:"Homing missiles. Tracks and destroys targets.",
     upgrades:[
-      [{name:"Storm Cell",desc:"+5 chain targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+5;},cost:700},
-       {name:"Overload",desc:"Dmg +100%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2;},cost:800},
-       {name:"Arc Length",desc:"Chain range +80px",fn:t=>{t.chainRange=(t.chainRange||110)+80;},cost:600},
-       {name:"Paralyze",desc:"1s stun per hit",fn:t=>{t.stunDur=60;},cost:1000}],
-      [{name:"Hurricane",desc:"+12 more targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+12;},cost:2500},
-       {name:"Ball Lightning",desc:"AoE 100px on each",fn:t=>{t.splash=100;},cost:3000},
-       {name:"Megastorm",desc:"Dmg x5",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;},cost:4000},
-       {name:"Tempest God",desc:"All enemies, insta-chain",fn:t=>{t.globalChain=true;t.dmgMult=(t.dmgMult||1)*3;},cost:9000}]
+      [{name:"Warhead+",desc:"Damage +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:700},{name:"Long Range",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:650},{name:"Quick Launch",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:750},{name:"Cluster",desc:"Splits into 4",fn:t=>{t.multiShot=4;},cost:1000}],
+      [{name:"ICBM",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:2000},{name:"Nuke Tip",desc:"Splash x3.5",fn:t=>{t.splashMult=(t.splashMult||1)*3.5;},cost:2000},{name:"Barrage",desc:"Fire 6 at once",fn:t=>{t.multiShot=6;},cost:2500},{name:"Apocalypse",desc:"x6 dmg, 400px splash",fn:t=>{t.dmgMult=(t.dmgMult||1)*6;t.splashMult=999;},cost:6000}]
     ]},
 
-  cryo_cannon:{name:"Cryo Cannon",emoji:"🧊",cost:1600,range:200,fireRate:90,damage:40,color:"#0ea5e9",baseColor:"#0ea5e9",
-    barrelLen:30,barrelW:12,muzzleColor:"#7dd3fc",towerSize:21,unlockWave:12,isFrost:true,splashR:100,
+  railgun:{name:"Railgun",emoji:"🔷",cost:900,range:540,fireRate:170,damage:380,color:"#3b82f6",baseColor:"#3b82f6",barrelLen:46,barrelW:7,muzzleColor:"#93c5fd",towerSize:19,unlockWave:12,tier:3,isRailgun:true,
+    desc:"Pierces ALL enemies in a straight line.",
+    upgrades:[
+      [{name:"Penetrator",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:600},{name:"Rail Ext",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:600},{name:"Gauss",desc:"Rate +45%",fn:t=>{t.rateMult=(t.rateMult||1)*0.55;},cost:700},{name:"Shockwave",desc:"Splash 50px per hit",fn:t=>{t.splash=50;},cost:800}],
+      [{name:"Annihilator",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1800},{name:"Rapid Rail",desc:"Rate x2.5",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;},cost:1600},{name:"Triple Rail",desc:"3 parallel rails",fn:t=>{t.multiRail=3;},cost:2000},{name:"Godgun",desc:"Execute <50% HP",fn:t=>{t.executeThresh=0.5;},cost:3500}]
+    ]},
+
+  cryo_cannon:{name:"Cryo Cannon",emoji:"🧊",cost:1600,range:225,fireRate:90,damage:40,color:"#0ea5e9",baseColor:"#0ea5e9",barrelLen:30,barrelW:12,muzzleColor:"#7dd3fc",towerSize:21,unlockWave:12,tier:3,isFrost:true,splashR:110,
     desc:"Frost AoE shell. Slows entire groups on impact.",
     upgrades:[
-      [{name:"Deep Cryo",desc:"Slow to 15%",fn:t=>{t.slowPower=0.15;},cost:600},
-       {name:"Cryo Blast",desc:"Splash +60px",fn:t=>{t.splashMult=(t.splashMult||1)*1.6;},cost:600},
-       {name:"Rapid Freeze",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:700},
-       {name:"Freeze Dmg",desc:"Dmg +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:800}],
-      [{name:"Glacial",desc:"Full freeze 2.5s",fn:t=>{t.stunDur=150;},cost:2500},
-       {name:"Snowstorm",desc:"Chains freeze 5 near",fn:t=>{t.frostAoE=200;},cost:2500},
-       {name:"Absolute Zero",desc:"Dmg x4 + perma slow",fn:t=>{t.dmgMult=(t.dmgMult||1)*4;t.slowDuration=9999;},cost:4000},
-       {name:"Ice Age",desc:"Full map freeze",fn:t=>{t.globalChill=true;t.stunDur=300;},cost:8000}]
+      [{name:"Deep Cryo",desc:"Slow to 15%",fn:t=>{t.slowPower=0.15;},cost:600},{name:"Cryo Blast",desc:"Splash +60px",fn:t=>{t.splashMult=(t.splashMult||1)*1.6;},cost:600},{name:"Rapid Freeze",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:700},{name:"Freeze Dmg",desc:"Dmg +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:800}],
+      [{name:"Glacial",desc:"Full freeze 2.5s",fn:t=>{t.stunDur=150;},cost:2500},{name:"Snowstorm",desc:"Chains freeze 5 near",fn:t=>{t.frostAoE=200;},cost:2500},{name:"Absolute Zero",desc:"Dmg x4 + perma slow",fn:t=>{t.dmgMult=(t.dmgMult||1)*4;t.slowDuration=9999;},cost:4000},{name:"Ice Age",desc:"Full map freeze",fn:t=>{t.globalChill=true;t.stunDur=300;},cost:8000}]
     ]},
 
-  inferno_tower:{name:"Inferno",emoji:"🔴🌋",cost:2500,range:180,fireRate:2,damage:12,color:"#dc2626",baseColor:"#dc2626",
-    barrelLen:26,barrelW:14,muzzleColor:"#f87171",towerSize:23,unlockWave:17,isFlame:true,
+  chain_lightning:{name:"Chain Storm",emoji:"⛈️",cost:1800,range:290,fireRate:55,damage:60,color:"#7dd3fc",baseColor:"#7dd3fc",barrelLen:22,barrelW:10,muzzleColor:"#bae6fd",towerSize:21,unlockWave:13,tier:3,isTesla:true,chainCount:8,
+    desc:"Upgraded Tesla. Hits 8+ enemies per arc.",
+    upgrades:[
+      [{name:"Storm Cell",desc:"+5 chain targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+5;},cost:700},{name:"Overload",desc:"Dmg +100%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2;},cost:800},{name:"Arc Length",desc:"Chain range +80px",fn:t=>{t.chainRange=(t.chainRange||120)+80;},cost:600},{name:"Paralyze",desc:"1s stun per hit",fn:t=>{t.stunDur=60;},cost:1000}],
+      [{name:"Hurricane",desc:"+12 more targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+12;},cost:2500},{name:"Ball Lightning",desc:"AoE 100px on each",fn:t=>{t.splash=100;},cost:3000},{name:"Megastorm",desc:"Dmg x5",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;},cost:4000},{name:"Tempest God",desc:"All enemies insta-chain",fn:t=>{t.globalChain=true;t.dmgMult=(t.dmgMult||1)*3;},cost:9000}]
+    ]},
+
+  shockwave:{name:"Shockwave",emoji:"🌀",cost:1500,range:265,fireRate:210,damage:100,color:"#8b5cf6",baseColor:"#8b5cf6",barrelLen:18,barrelW:17,muzzleColor:"#c4b5fd",towerSize:22,unlockWave:14,tier:3,isShockwave:true,splashR:230,
+    desc:"Ground pound. Launches enemies backward.",
+    upgrades:[
+      [{name:"Impact+",desc:"Damage +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:900},{name:"Wider",desc:"Radius +70px",fn:t=>{t.splashMult=(t.splashMult||1)*1.35;},cost:800},{name:"Rapid",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:850},{name:"Stun",desc:"1.2s stun in radius",fn:t=>{t.stunDur=72;},cost:1200}],
+      [{name:"Titan",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:2500},{name:"Global Quake",desc:"Full screen",fn:t=>{t.splashMult=999;},cost:3000},{name:"Chain Wave",desc:"3 waves per strike",fn:t=>{t.chainWaves=3;},cost:2500},{name:"Apocalypse",desc:"Dmg x7, Rate x2",fn:t=>{t.dmgMult=(t.dmgMult||1)*7;t.rateMult=(t.rateMult||1)*0.5;},cost:7000}]
+    ]},
+
+  multi_mortar:{name:"Multi-Mortar",emoji:"🔥🔶",cost:1400,range:400,fireRate:280,damage:200,color:"#b45309",baseColor:"#b45309",barrelLen:18,barrelW:17,muzzleColor:"#fcd34d",towerSize:24,unlockWave:15,tier:3,isMortar:true,splashR:145,isMultiMortar:true,
+    desc:"Burst mortar: huge splash, massive range.",
+    upgrades:[
+      [{name:"Barrage",desc:"3 shells per burst",fn:t=>{t.multiShot=3;},cost:800},{name:"Earthquake",desc:"Splash +80px",fn:t=>{t.splashMult=(t.splashMult||1)*1.6;},cost:700},{name:"Titan Shell",desc:"Damage +100%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2;},cost:900},{name:"Incendiary",desc:"Burn 12 dmg/s",fn:t=>{t.burn=12;},cost:1000}],
+      [{name:"Quintuple Fire",desc:"5 shells per burst",fn:t=>{t.multiShot=5;},cost:2500},{name:"Shockwave",desc:"Stun 1.5s in splash",fn:t=>{t.stunDur=90;},cost:2000},{name:"Doom Volley",desc:"Damage x4",fn:t=>{t.dmgMult=(t.dmgMult||1)*4;},cost:3000},{name:"Cataclysm",desc:"Full map AoE x8 dmg",fn:t=>{t.splashMult=999;t.dmgMult=(t.dmgMult||1)*8;},cost:8000}]
+    ]},
+
+  gatling:{name:"Gatling",emoji:"🌀",cost:2000,range:210,fireRate:3,damage:18,color:"#16a34a",baseColor:"#16a34a",barrelLen:30,barrelW:10,muzzleColor:"#4ade80",towerSize:22,unlockWave:16,tier:3,
+    desc:"Ultra-rapid fire. Destroys swarms instantly.",
+    upgrades:[
+      [{name:"Spooled Up",desc:"Rate +70%",fn:t=>{t.rateMult=(t.rateMult||1)*0.3;},cost:800},{name:"Massive Caliber",desc:"Dmg +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:900},{name:"Extended Range",desc:"Range +30%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.3;},cost:700},{name:"Incendiary",desc:"Burn 5 dmg/s",fn:t=>{t.burn=5;},cost:1000}],
+      [{name:"Six Barrels",desc:"6 shots/tick",fn:t=>{t.multiShot=6;},cost:3000},{name:"Demon Mode",desc:"Rate x4 Dmg x3",fn:t=>{t.rateMult=(t.rateMult||1)*0.25;t.dmgMult=(t.dmgMult||1)*3;},cost:5000},{name:"Armor Melt",desc:"Armor -15 per hit",fn:t=>{t.armorShred=15;},cost:2500},{name:"Obliterator",desc:"Everything dies",fn:t=>{t.dmgMult=(t.dmgMult||1)*8;t.rateMult=(t.rateMult||1)*0.2;},cost:10000}]
+    ]},
+
+  // ── TIER 4: HIGH RANGE / LATE ──
+  inferno_tower:{name:"Inferno",emoji:"🔴🌋",cost:2500,range:200,fireRate:2,damage:12,color:"#dc2626",baseColor:"#dc2626",barrelLen:26,barrelW:14,muzzleColor:"#f87171",towerSize:23,unlockWave:17,tier:4,isFlame:true,
     desc:"Extreme fire DPS. Burns everything it touches.",
     upgrades:[
-      [{name:"Hellgate",desc:"Dmg +150%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.5;},cost:1200},
-       {name:"Mega Nozzle",desc:"Range +40%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.4;},cost:1000},
-       {name:"Daemon Fire",desc:"Burn 20 dmg/s",fn:t=>{t.burn=20;},cost:1500},
-       {name:"Cone",desc:"120° cone AoE",fn:t=>{t.flameCone=true;},cost:1800}],
-      [{name:"Infernal",desc:"Dmg x5",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;},cost:4000},
-       {name:"Solar Flare",desc:"Screen fill",fn:t=>{t.rangeMult=999;t.flameCone=true;},cost:8000},
-       {name:"Lava Field",desc:"Permanent fire patches",fn:t=>{t.fireField=true;t.burn=30;},cost:5000},
-       {name:"Nova",desc:"Rate x4, Dmg x8",fn:t=>{t.rateMult=(t.rateMult||1)*0.25;t.dmgMult=(t.dmgMult||1)*8;},cost:15000}]
+      [{name:"Hellgate",desc:"Dmg +150%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.5;},cost:1200},{name:"Mega Nozzle",desc:"Range +40%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.4;},cost:1000},{name:"Daemon Fire",desc:"Burn 20 dmg/s",fn:t=>{t.burn=20;},cost:1500},{name:"Cone",desc:"120° cone AoE",fn:t=>{t.flameCone=true;},cost:1800}],
+      [{name:"Infernal",desc:"Dmg x5",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;},cost:4000},{name:"Solar Flare",desc:"Screen fill",fn:t=>{t.rangeMult=999;t.flameCone=true;},cost:8000},{name:"Lava Field",desc:"Permanent fire patches",fn:t=>{t.fireField=true;t.burn=30;},cost:5000},{name:"Nova",desc:"Rate x4, Dmg x8",fn:t=>{t.rateMult=(t.rateMult||1)*0.25;t.dmgMult=(t.dmgMult||1)*8;},cost:15000}]
     ]},
 
-  time_warp:{name:"Time Warp",emoji:"⏱️",cost:2800,range:200,fireRate:1,damage:0,color:"#818cf8",baseColor:"#818cf8",
-    barrelLen:16,barrelW:16,muzzleColor:"#c7d2fe",towerSize:21,unlockWave:19,isBarrier:true,
-    desc:"Time dilation field. Slows everything to 30% speed.",
+  oracle:{name:"Oracle",emoji:"👁️",cost:3000,range:380,fireRate:1,damage:0,color:"#fbbf24",baseColor:"#fbbf24",barrelLen:16,barrelW:16,muzzleColor:"#fde68a",towerSize:20,unlockWave:18,tier:4,isOracle:true,
+    desc:"Aura: all towers in range deal +30% dmg.",
     upgrades:[
-      [{name:"Stronger Field",desc:"Slow to 20%",fn:t=>{t.barrierSlow=0.2;},cost:1000},
-       {name:"Wide Field",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:1000},
-       {name:"Temporal Damage",desc:"15 dmg/s in field",fn:t=>{t.barrierDmg=15;},cost:1200},
-       {name:"Rewind",desc:"Push back enemies 20px",fn:t=>{t.timeRewind=true;},cost:1500}],
-      [{name:"Stop Time",desc:"Full freeze in range",fn:t=>{t.timeStop=true;},cost:4000},
-       {name:"Time Bomb",desc:"60 dmg/s in range",fn:t=>{t.barrierDmg=60;},cost:5000},
-       {name:"Chrono Collapse",desc:"Insta-kill in zone",fn:t=>{t.barrierKill=true;},cost:8000},
-       {name:"Paradox",desc:"Enemies age, losing HP",fn:t=>{t.barrierDmg=120;t.barrierSlow=0.05;},cost:12000}]
+      [{name:"Far Sight",desc:"Aura +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:1500},{name:"Insight",desc:"Aura +60% dmg",fn:t=>{t.auraMult=(t.auraMult||1.3)*1.5;},cost:2000},{name:"Haste",desc:"Aura +30% rate",fn:t=>{t.auraRate=true;},cost:1800},{name:"Gold Eye",desc:"+$5 per kill",fn:t=>{t.goldAura=5;},cost:2500}],
+      [{name:"All-Seeing",desc:"Aura dmg x3",fn:t=>{t.auraMult=(t.auraMult||1.3)*2.2;},cost:4000},{name:"Omniscient",desc:"Global aura",fn:t=>{t.globalAura=true;},cost:6000},{name:"Fortune",desc:"+$15 per kill global",fn:t=>{t.goldAura=15;t.goldAuraGlobal=true;},cost:7000},{name:"GOD EYE",desc:"All stats x3 global",fn:t=>{t.godEye=true;},cost:15000}]
     ]},
 
-  sniper_nest:{name:"Sniper Nest",emoji:"🦅",cost:3500,range:600,fireRate:90,damage:500,color:"#c2410c",baseColor:"#c2410c",
-    barrelLen:50,barrelW:5,muzzleColor:"#fed7aa",towerSize:20,unlockWave:20,
+  time_warp:{name:"Time Warp",emoji:"⏱️",cost:2800,range:225,fireRate:1,damage:0,color:"#818cf8",baseColor:"#818cf8",barrelLen:16,barrelW:16,muzzleColor:"#c7d2fe",towerSize:21,unlockWave:19,tier:4,isBarrier:true,
+    desc:"Time dilation field. Slows everything to 30%.",
+    upgrades:[
+      [{name:"Stronger Field",desc:"Slow to 20%",fn:t=>{t.barrierSlow=0.2;},cost:1000},{name:"Wide Field",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:1000},{name:"Temporal Damage",desc:"15 dmg/s in field",fn:t=>{t.barrierDmg=15;},cost:1200},{name:"Rewind",desc:"Push back enemies",fn:t=>{t.timeRewind=true;},cost:1500}],
+      [{name:"Stop Time",desc:"Full freeze in range",fn:t=>{t.timeStop=true;},cost:4000},{name:"Time Bomb",desc:"60 dmg/s in range",fn:t=>{t.barrierDmg=60;},cost:5000},{name:"Chrono Collapse",desc:"Instakill in zone",fn:t=>{t.barrierKill=true;},cost:8000},{name:"Paradox",desc:"120 dmg/s, 5% speed",fn:t=>{t.barrierDmg=120;t.barrierSlow=0.05;},cost:12000}]
+    ]},
+
+  sniper_nest:{name:"Sniper Nest",emoji:"🦅",cost:3500,range:680,fireRate:90,damage:500,color:"#c2410c",baseColor:"#c2410c",barrelLen:52,barrelW:5,muzzleColor:"#fed7aa",towerSize:20,unlockWave:20,tier:4,
     desc:"Double-range ultra sniper. One-shots most enemies.",
     upgrades:[
-      [{name:"Longshot",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:1500},
-       {name:"Overkill",desc:"Dmg +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:1800},
-       {name:"Semi-Auto",desc:"Rate +60%",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;},cost:1500},
-       {name:"Piercing",desc:"Ignore all armor",fn:t=>{t.armorPierce=999;},cost:2000}],
-      [{name:"Anti-Boss",desc:"x4 dmg vs bosses",fn:t=>{t.antiArmor=4;},cost:4000},
-       {name:"Scatter Shot",desc:"3 bullets per shot",fn:t=>{t.multiShot=3;},cost:3500},
-       {name:"Execute",desc:"Instant kill <70% HP",fn:t=>{t.executeThresh=0.7;},cost:5000},
-       {name:"God Sight",desc:"Dmg x8, full map range",fn:t=>{t.dmgMult=(t.dmgMult||1)*8;t.rangeMult=999;},cost:15000}]
+      [{name:"Longshot",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:1500},{name:"Overkill",desc:"Dmg +120%",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.2;},cost:1800},{name:"Semi-Auto",desc:"Rate +60%",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;},cost:1500},{name:"Piercing",desc:"Ignore all armor",fn:t=>{t.armorPierce=999;},cost:2000}],
+      [{name:"Anti-Boss",desc:"x4 dmg vs bosses",fn:t=>{t.antiArmor=4;},cost:4000},{name:"Scatter Shot",desc:"3 bullets per shot",fn:t=>{t.multiShot=3;},cost:3500},{name:"Execute",desc:"Instakill <70% HP",fn:t=>{t.executeThresh=0.7;},cost:5000},{name:"God Sight",desc:"Dmg x8, full map",fn:t=>{t.dmgMult=(t.dmgMult||1)*8;t.rangeMult=999;},cost:15000}]
     ]},
 
-  poison_rain:{name:"Acid Rain",emoji:"🌧️",cost:900,range:280,fireRate:120,damage:15,color:"#65a30d",baseColor:"#65a30d",
-    barrelLen:22,barrelW:11,muzzleColor:"#a3e635",towerSize:19,unlockWave:10,isPoison:true,splashR:80,
-    desc:"Rains acid AoE. Poisons groups with every shot.",
+  earthquake:{name:"Quake Tower",emoji:"🌍",cost:4000,range:330,fireRate:250,damage:300,color:"#78350f",baseColor:"#78350f",barrelLen:16,barrelW:20,muzzleColor:"#d97706",towerSize:26,unlockWave:22,tier:4,isShockwave:true,splashR:330,
+    desc:"Massive tremor. Pushes and damages huge range.",
     upgrades:[
-      [{name:"Acid Flood",desc:"AoE +60px",fn:t=>{t.splashMult=(t.splashMult||1)*1.75;},cost:600},
-       {name:"Concentrated",desc:"Poison x3",fn:t=>{t.poisonMult=(t.poisonMult||1)*3;},cost:700},
-       {name:"Rapid Drop",desc:"Rate +50%",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:600},
-       {name:"Corrosive",desc:"Armor -10 per hit",fn:t=>{t.armorShred=10;},cost:800}],
-      [{name:"Chemical Rain",desc:"Full screen rain",fn:t=>{t.splashMult=999;},cost:3000},
-       {name:"Plague Cloud",desc:"Poison x8",fn:t=>{t.poisonMult=(t.poisonMult||1)*8;},cost:3500},
-       {name:"Melting",desc:"Armor to 0",fn:t=>{t.armorShred=100;},cost:4000},
-       {name:"Extinction",desc:"Pandemic + x10 poison",fn:t=>{t.globalPoison=true;t.poisonMult=(t.poisonMult||1)*10;},cost:9000}]
+      [{name:"Tectonic",desc:"Dmg +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:2000},{name:"Massive Quake",desc:"AoE +100px",fn:t=>{t.splashMult=(t.splashMult||1)*1.35;},cost:2000},{name:"Aftershock",desc:"3 follow-up quakes",fn:t=>{t.chainWaves=3;},cost:2500},{name:"Tremor",desc:"Stun 2s in range",fn:t=>{t.stunDur=120;},cost:3000}],
+      [{name:"Richter 10",desc:"Dmg x5",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;},cost:7000},{name:"Continental",desc:"Full map AoE",fn:t=>{t.splashMult=999;},cost:9000},{name:"Megaquake",desc:"Rate x2",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:7000},{name:"Apocalypse",desc:"x10 dmg, full map, 3s stun",fn:t=>{t.dmgMult=(t.dmgMult||1)*10;t.splashMult=999;t.stunDur=180;},cost:20000}]
     ]},
 
-  earthquake:{name:"Quake Tower",emoji:"🌍",cost:4000,range:300,fireRate:250,damage:300,color:"#78350f",baseColor:"#78350f",
-    barrelLen:16,barrelW:20,muzzleColor:"#d97706",towerSize:26,unlockWave:22,isShockwave:true,splashR:300,
-    desc:"Massive tremor. Pushes and damages all in huge range.",
+  plasma:{name:"Plasma",emoji:"💥",cost:1200,range:280,fireRate:240,damage:320,color:"#ff4500",baseColor:"#ff4500",barrelLen:34,barrelW:14,muzzleColor:"#f97316",towerSize:22,unlockWave:10,tier:3,isPlasma:true,splashR:200,
+    desc:"Massive AoE artillery. Devastating vs hordes.",
     upgrades:[
-      [{name:"Tectonic",desc:"Dmg +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:2000},
-       {name:"Massive Quake",desc:"AoE +100px",fn:t=>{t.splashMult=(t.splashMult||1)*1.35;},cost:2000},
-       {name:"Aftershock",desc:"3 follow-up quakes",fn:t=>{t.chainWaves=3;},cost:2500},
-       {name:"Tremor",desc:"Stun 2s in range",fn:t=>{t.stunDur=120;},cost:3000}],
-      [{name:"Richter 10",desc:"Dmg x5",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;},cost:7000},
-       {name:"Continental",desc:"Full map AoE",fn:t=>{t.splashMult=999;},cost:9000},
-       {name:"Megaquake",desc:"Rate x2",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:7000},
-       {name:"Apocalypse",desc:"x10 dmg, full map, 3s stun",fn:t=>{t.dmgMult=(t.dmgMult||1)*10;t.splashMult=999;t.stunDur=180;},cost:20000}]
+      [{name:"Mega Warhead",desc:"Damage +70%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.7;},cost:700},{name:"Wide Arc",desc:"Splash +60px",fn:t=>{t.splashMult=(t.splashMult||1)*1.35;},cost:650},{name:"Rapid Fire",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:600},{name:"Napalm",desc:"Burn 10 dmg/s",fn:t=>{t.burn=10;},cost:900}],
+      [{name:"Nuke Shell",desc:"Dmg x2.5, Splash x2",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.5;t.splashMult=(t.splashMult||1)*2;},cost:2000},{name:"Carpet Bomb",desc:"3 shells per volley",fn:t=>{t.multiShot=3;},cost:1800},{name:"EMP Blast",desc:"Slow all in AoE 5s",fn:t=>{t.empSlow=true;},cost:1500},{name:"Doomsday",desc:"Dmg x5 full map",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;t.splashMult=999;},cost:5000}]
     ]},
 
-  gold_mine:{name:"Gold Mine",emoji:"💎",cost:1500,range:200,fireRate:1,damage:0,color:"#fbbf24",baseColor:"#fbbf24",
-    barrelLen:14,barrelW:14,muzzleColor:"#fef08a",towerSize:20,unlockWave:3,isBarrier:true,isGoldMine:true,
-    desc:"Passive income tower. Earns gold per kill nearby.",
+  // ── TIER 5: ULTIMATE ──
+  beam_cannon:{name:"Beam Cannon",emoji:"🟣",cost:5000,range:680,fireRate:300,damage:800,color:"#9333ea",baseColor:"#9333ea",barrelLen:48,barrelW:10,muzzleColor:"#d8b4fe",towerSize:24,unlockWave:24,tier:5,isRailgun:true,
+    desc:"Massive piercing beam. Infinite range.",
     upgrades:[
-      [{name:"Rich Vein",desc:"+$8 per kill",fn:t=>{t.goldAura=8;},cost:600},
-       {name:"Wide Radius",desc:"Range +60%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.6;},cost:700},
-       {name:"Efficiency",desc:"Also gain score",fn:t=>{t.goldBoostScore=true;},cost:500},
-       {name:"Gem Cluster",desc:"+$20 per kill",fn:t=>{t.goldAura=20;},cost:1500}],
-      [{name:"Diamond",desc:"+$50 per kill",fn:t=>{t.goldAura=50;},cost:3500},
-       {name:"Global Mine",desc:"Bonus everywhere",fn:t=>{t.goldAuraGlobal=true;},cost:5000},
-       {name:"Interest",desc:"+1% gold/wave",fn:t=>{t.goldInterest=true;},cost:4000},
-       {name:"Fortune",desc:"+$100 per kill global",fn:t=>{t.goldAura=100;t.goldAuraGlobal=true;},cost:12000}]
+      [{name:"Focused Beam",desc:"Dmg +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:2500},{name:"Hyper Range",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:2000},{name:"Rapid Fire",desc:"Rate +50%",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:2500},{name:"Widened",desc:"Beam hits 3 rows",fn:t=>{t.multiRail=3;},cost:3000}],
+      [{name:"Death Beam",desc:"Dmg x4",fn:t=>{t.dmgMult=(t.dmgMult||1)*4;},cost:7000},{name:"Phase",desc:"Ignore armor",fn:t=>{t.armorPierce=999;},cost:6000},{name:"Execute",desc:"Instakill <40%",fn:t=>{t.executeThresh=0.4;},cost:7000},{name:"Omega Beam",desc:"Dmg x10, full map",fn:t=>{t.dmgMult=(t.dmgMult||1)*10;t.rangeMult=999;},cost:25000}]
     ]},
 
-  beam_cannon:{name:"Beam Cannon",emoji:"🟣",cost:5000,range:600,fireRate:300,damage:800,color:"#9333ea",baseColor:"#9333ea",
-    barrelLen:46,barrelW:10,muzzleColor:"#d8b4fe",towerSize:24,unlockWave:24,isRailgun:true,
-    desc:"Massive piercing beam. Infinite range, destroys lines.",
+  nuke:{name:"Nuke Silo",emoji:"☢️",cost:12000,range:680,fireRate:700,damage:5000,color:"#ef4444",baseColor:"#ef4444",barrelLen:18,barrelW:18,muzzleColor:"#fca5a5",towerSize:30,unlockWave:25,tier:5,isNuke:true,splashR:450,
+    desc:"ULTIMATE. Screen-clearing devastation.",
     upgrades:[
-      [{name:"Focused Beam",desc:"Dmg +90%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.9;},cost:2500},
-       {name:"Hyper Range",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:2000},
-       {name:"Rapid Fire",desc:"Rate +50%",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:2500},
-       {name:"Widened",desc:"Beam hits 3 rows",fn:t=>{t.multiRail=3;},cost:3000}],
-      [{name:"Death Beam",desc:"Dmg x4",fn:t=>{t.dmgMult=(t.dmgMult||1)*4;},cost:7000},
-       {name:"Phase",desc:"Ignore armor",fn:t=>{t.armorPierce=999;},cost:6000},
-       {name:"Execute",desc:"Insta-kill <40%",fn:t=>{t.executeThresh=0.4;},cost:7000},
-       {name:"Omega Beam",desc:"Dmg x10, full map",fn:t=>{t.dmgMult=(t.dmgMult||1)*10;t.rangeMult=999;},cost:25000}]
+      [{name:"Yield+",desc:"Damage +60%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.6;},cost:3000},{name:"MIRV",desc:"Fire 5 warheads",fn:t=>{t.multiShot=5;},cost:4000},{name:"Rapid",desc:"Rate +35%",fn:t=>{t.rateMult=(t.rateMult||1)*0.65;},cost:3500},{name:"EMP",desc:"Stun all 12s post blast",fn:t=>{t.stunDur=720;},cost:5000}],
+      [{name:"Tsar Bomba",desc:"Damage x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:9000},{name:"Omega Nuke",desc:"Full-screen always",fn:t=>{t.splashMult=999;},cost:12000},{name:"Carpet",desc:"5 warheads fast",fn:t=>{t.multiShot=5;t.rateMult=(t.rateMult||1)*0.5;},cost:10000},{name:"APOCALYPSE",desc:"Kills everything",fn:t=>{t.dmgMult=(t.dmgMult||1)*100;},cost:30000}]
+    ]},
+
+  // ── EXTRA TOWERS ──
+  scatter_gun:{name:"Scatter Gun",emoji:"💠",cost:120,range:145,fireRate:35,damage:12,color:"#94a3b8",baseColor:"#94a3b8",barrelLen:24,barrelW:10,muzzleColor:"#cbd5e0",towerSize:17,unlockWave:0,tier:1,
+    desc:"Fires in a wide spread. Great for crowds.",
+    upgrades:[
+      [{name:"Wide Shot",desc:"Fire 3 spread",fn:t=>{t.multiShot=3;},cost:150},{name:"Heavy Load",desc:"Dmg +70%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.7;},cost:200},{name:"Rapid Load",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:180},{name:"Buckshot",desc:"Fire 5 spread",fn:t=>{t.multiShot=5;},cost:400}],
+      [{name:"Dragon Spread",desc:"Burn 6 dmg/s",fn:t=>{t.burn=6;},cost:800},{name:"Boom Spread",desc:"Splash 50px each",fn:t=>{t.splash=50;},cost:1000},{name:"Full Spray",desc:"Fire 8 spread",fn:t=>{t.multiShot=8;},cost:1500},{name:"God Spread",desc:"Dmg x4, 10 pellets",fn:t=>{t.dmgMult=(t.dmgMult||1)*4;t.multiShot=10;},cost:5000}]
+    ]},
+
+  volt_tower:{name:"Volt",emoji:"🔆",cost:400,range:195,fireRate:60,damage:30,color:"#facc15",baseColor:"#facc15",barrelLen:26,barrelW:9,muzzleColor:"#fef08a",towerSize:17,unlockWave:2,tier:1,
+    desc:"Steady electric fire. Decent DPS and range.",
+    upgrades:[
+      [{name:"Capacitor",desc:"Dmg +60%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.6;},cost:250},{name:"Coil Ext",desc:"Range +30%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.3;},cost:220},{name:"Fast Pulse",desc:"Rate +40%",fn:t=>{t.rateMult=(t.rateMult||1)*0.6;},cost:240},{name:"Shock",desc:"0.3s stun on hit",fn:t=>{t.stunDur=18;},cost:500}],
+      [{name:"Surge",desc:"Dmg x2.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*2.5;},cost:1200},{name:"Ball",desc:"AoE 80px",fn:t=>{t.splash=80;},cost:1000},{name:"Overcharge",desc:"Rate x2",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:1100},{name:"Tesla God",desc:"Dmg x5, chain 6",fn:t=>{t.dmgMult=(t.dmgMult||1)*5;t.chainCount=6;t.isTesla2=true;},cost:4000}]
+    ]},
+
+  needle:{name:"Needle",emoji:"🔹",cost:600,range:520,fireRate:95,damage:60,color:"#38bdf8",baseColor:"#38bdf8",barrelLen:48,barrelW:5,muzzleColor:"#bae6fd",towerSize:16,unlockWave:4,tier:2,
+    desc:"Long-range precise shots. Ignores light armor.",
+    upgrades:[
+      [{name:"Sharp",desc:"Ignore 12 armor",fn:t=>{t.armorPierce=(t.armorPierce||0)+12;},cost:300},{name:"Long Shot",desc:"Range +40%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.4;},cost:280},{name:"Rapid",desc:"Rate +50%",fn:t=>{t.rateMult=(t.rateMult||1)*0.5;},cost:320},{name:"Triple Needle",desc:"3 shots per fire",fn:t=>{t.multiShot=3;},cost:700}],
+      [{name:"Hyper Needle",desc:"Dmg x3",fn:t=>{t.dmgMult=(t.dmgMult||1)*3;},cost:2000},{name:"Piercer",desc:"Ignore all armor",fn:t=>{t.armorPierce=999;},cost:1800},{name:"Volley",desc:"5 needles per shot",fn:t=>{t.multiShot=5;},cost:2500},{name:"Obliterate",desc:"Execute <60%",fn:t=>{t.executeThresh=0.6;},cost:5000}]
+    ]},
+
+  arc_tower:{name:"Arc Tower",emoji:"🌩️",cost:1100,range:250,fireRate:40,damage:55,color:"#a78bfa",baseColor:"#a78bfa",barrelLen:20,barrelW:12,muzzleColor:"#ddd6fe",towerSize:19,unlockWave:8,tier:2,isTesla:true,chainCount:4,
+    desc:"Arc damage in a radius. Hits multiple enemies.",
+    upgrades:[
+      [{name:"Wide Arc",desc:"Range +40%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.4;},cost:500},{name:"Power",desc:"Dmg +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:550},{name:"Multi Arc",desc:"+4 chain targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+4;},cost:600},{name:"EMP",desc:"2s slow on hit",fn:t=>{t.empSlow=true;},cost:800}],
+      [{name:"Mega Arc",desc:"Dmg x3",fn:t=>{t.dmgMult=(t.dmgMult||1)*3;},cost:2000},{name:"Storm Wall",desc:"8 chain targets",fn:t=>{t.chainBonus=(t.chainBonus||0)+8;},cost:2200},{name:"Disintegrate",desc:"Armor -12 per hit",fn:t=>{t.armorShred=12;},cost:1800},{name:"God Arc",desc:"x6 dmg, x2 chains",fn:t=>{t.dmgMult=(t.dmgMult||1)*6;t.chainBonus=(t.chainBonus||0)+12;},cost:8000}]
+    ]},
+
+  ice_wall:{name:"Ice Wall",emoji:"🏔️",cost:800,range:150,fireRate:1,damage:0,color:"#7dd3fc",baseColor:"#7dd3fc",barrelLen:12,barrelW:20,muzzleColor:"#bae6fd",towerSize:22,unlockWave:6,tier:2,isBarrier:true,
+    desc:"Frost barrier. Slows and damages in radius.",
+    upgrades:[
+      [{name:"Frost Aura",desc:"Slow to 30%",fn:t=>{t.barrierSlow=0.3;},cost:400},{name:"Wide Wall",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:400},{name:"Cold Damage",desc:"12 dmg/s in range",fn:t=>{t.barrierDmg=12;},cost:500},{name:"Permafrost",desc:"Slow to 15%",fn:t=>{t.barrierSlow=0.15;},cost:700}],
+      [{name:"Blizzard Zone",desc:"25 dmg/s + slow 10%",fn:t=>{t.barrierDmg=25;t.barrierSlow=0.1;},cost:1800},{name:"Arctic Wall",desc:"Full freeze 3s",fn:t=>{t.timeStop=true;},cost:2500},{name:"Cryo Pulse",desc:"50 dmg/s in range",fn:t=>{t.barrierDmg=50;},cost:3000},{name:"Absolute Zero",desc:"Instakill in zone",fn:t=>{t.barrierKill=true;},cost:7000}]
+    ]},
+
+  spike_trap:{name:"Spike Trap",emoji:"🗡️",cost:200,range:120,fireRate:15,damage:18,color:"#6b7280",baseColor:"#6b7280",barrelLen:12,barrelW:16,muzzleColor:"#9ca3af",towerSize:16,unlockWave:1,tier:1,
+    desc:"Ground spikes shred slow or stopped enemies.",
+    upgrades:[
+      [{name:"Razor",desc:"Dmg +80%",fn:t=>{t.dmgMult=(t.dmgMult||1)*1.8;},cost:180},{name:"Wider",desc:"Range +35%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.35;},cost:160},{name:"Rapid Spike",desc:"Rate +60%",fn:t=>{t.rateMult=(t.rateMult||1)*0.4;},cost:200},{name:"Poison Tips",desc:"Poison 8 dmg/s",fn:t=>{t.poisonMult=2;t.isPoison2=true;},cost:400}],
+      [{name:"Death Floor",desc:"Dmg x3.5",fn:t=>{t.dmgMult=(t.dmgMult||1)*3.5;},cost:1200},{name:"Bleed",desc:"Burn 10 dmg/s",fn:t=>{t.burn=10;},cost:1000},{name:"Shrapnel",desc:"AoE 70px",fn:t=>{t.splash=70;},cost:1100},{name:"Obliterate",desc:"Dmg x7, Rate x2",fn:t=>{t.dmgMult=(t.dmgMult||1)*7;t.rateMult=(t.rateMult||1)*0.5;},cost:5000}]
+    ]},
+
+  gravity_well:{name:"Gravity Well",emoji:"🕳️",cost:2200,range:270,fireRate:1,damage:0,color:"#4c1d95",baseColor:"#4c1d95",barrelLen:14,barrelW:14,muzzleColor:"#8b5cf6",towerSize:22,unlockWave:16,tier:4,isBarrier:true,
+    desc:"Pulls enemies to center. Slow + cluster them.",
+    upgrades:[
+      [{name:"Strong Pull",desc:"Slow to 20%",fn:t=>{t.barrierSlow=0.2;},cost:1000},{name:"Wide Field",desc:"Range +50%",fn:t=>{t.rangeMult=(t.rangeMult||1)*1.5;},cost:900},{name:"Crush",desc:"20 dmg/s in range",fn:t=>{t.barrierDmg=20;},cost:1200},{name:"Event Horizon",desc:"Full stop",fn:t=>{t.timeStop=true;},cost:1800}],
+      [{name:"Singularity",desc:"50 dmg/s in range",fn:t=>{t.barrierDmg=50;},cost:3500},{name:"Collapse",desc:"Instakill in zone",fn:t=>{t.barrierKill=true;},cost:5000},{name:"Vortex",desc:"Global range",fn:t=>{t.globalAura=true;t.barrierSlow=0.05;},cost:8000},{name:"Black Hole",desc:"Dmg x10, global",fn:t=>{t.barrierDmg=100;t.barrierKill=true;},cost:18000}]
     ]},
 };
 
@@ -755,16 +738,16 @@ const TOWER_KEYS=Object.keys(TOWER_TYPES);
 // ZOMBIE TYPES
 // ============================================================
 const ZOMBIE_TYPES=[
-  {name:"Walker",  color:"#4a90e2",speed:1.2, hpMult:1.0, reward:8,  size:12,armor:0, type:"normal"},
-  {name:"Runner",  color:"#f97316",speed:2.9, hpMult:0.5, reward:10, size:9, armor:0, type:"runner"},
-  {name:"Tank",    color:"#64748b",speed:0.5, hpMult:5.5, reward:25, size:21,armor:12,type:"tank"},
-  {name:"Boss",    color:"#ef4444",speed:0.6, hpMult:13,  reward:70, size:27,armor:22,type:"boss"},
-  {name:"Specter", color:"#c084fc",speed:3.5, hpMult:0.4, reward:13, size:10,armor:0, type:"specter",phase:true},
-  {name:"Brute",   color:"#374151",speed:0.7, hpMult:8.5, reward:38, size:25,armor:32,type:"brute"},
-  {name:"Swarm",   color:"#84cc16",speed:2.0, hpMult:0.18,reward:3,  size:6, armor:0, type:"swarm"},
-  {name:"MegaBoss",color:"#7c0000",speed:0.35,hpMult:28,  reward:160,size:35,armor:45,type:"megaboss"},
-  {name:"Stealth", color:"#1a1a2e",speed:2.2, hpMult:0.7, reward:15, size:10,armor:0, type:"stealth",phase:true},
-  {name:"Armored", color:"#475569",speed:0.9, hpMult:3.0, reward:20, size:15,armor:50,type:"armored"}
+  {name:"Walker",  color:"#4a90e2",speed:1.2, hpMult:1.0, reward:8,  size:13,armor:0, type:"normal"},
+  {name:"Runner",  color:"#f97316",speed:2.9, hpMult:0.5, reward:10, size:10,armor:0, type:"runner"},
+  {name:"Tank",    color:"#64748b",speed:0.5, hpMult:5.5, reward:25, size:23,armor:12,type:"tank"},
+  {name:"Boss",    color:"#ef4444",speed:0.6, hpMult:13,  reward:70, size:29,armor:22,type:"boss"},
+  {name:"Specter", color:"#c084fc",speed:3.5, hpMult:0.4, reward:13, size:11,armor:0, type:"specter",phase:true},
+  {name:"Brute",   color:"#374151",speed:0.7, hpMult:8.5, reward:38, size:27,armor:32,type:"brute"},
+  {name:"Swarm",   color:"#84cc16",speed:2.0, hpMult:0.18,reward:3,  size:7, armor:0, type:"swarm"},
+  {name:"MegaBoss",color:"#7c0000",speed:0.35,hpMult:28,  reward:160,size:37,armor:45,type:"megaboss"},
+  {name:"Stealth", color:"#1a1a2e",speed:2.2, hpMult:0.7, reward:15, size:11,armor:0, type:"stealth",phase:true},
+  {name:"Armored", color:"#475569",speed:0.9, hpMult:3.0, reward:20, size:16,armor:50,type:"armored"}
 ];
 
 // ============================================================
@@ -773,8 +756,7 @@ const ZOMBIE_TYPES=[
 function getSaveKey(s){return`td2d_save_${s}`;}
 function buildSave(){
   return{playerHp,gold,wave,score,currentMapIndex,beatMaps:[...beatMaps],unlockedTowers:[...unlockedTowers],
-    towers:towers.map(t=>({x:t.x,y:t.y,type:t.type,angle:t.angle||0,priority:t.priority,upgrades:t.upgrades||[],
-      dmgMult:t.dmgMult,rangeMult:t.rangeMult,rateMult:t.rateMult})),
+    towers:towers.map(t=>({x:t.x,y:t.y,type:t.type,angle:t.angle||0,priority:t.priority,upgrades:t.upgrades||[],dmgMult:t.dmgMult,rangeMult:t.rangeMult,rateMult:t.rateMult})),
     timestamp:Date.now()};
 }
 function saveGame(slot){try{localStorage.setItem(getSaveKey(slot),JSON.stringify(buildSave()));return true;}catch(e){return false;}}
@@ -790,8 +772,7 @@ function loadGame(slot){
       towers.push({x:td.x,y:td.y,type:td.type,angle:td.angle||0,cooldown:0,priority:td.priority||"first",
         upgrades:td.upgrades||[],recoil:0,id:Math.random(),dmgMult:td.dmgMult,rangeMult:td.rangeMult,rateMult:td.rateMult});
     });
-    resetArrays(false);
-    generateDecorations();updateUI();buildShop();return true;
+    resetArrays(false);generateDecorations();updateUI();buildShop();return true;
   }catch(e){return false;}
 }
 function deleteSave(slot){localStorage.removeItem(getSaveKey(slot));}
@@ -813,8 +794,7 @@ function initAudio(){
   try{
     audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     bgmGainNode=audioCtx.createGain();sfxGainNode=audioCtx.createGain();
-    bgmGainNode.gain.value=audioMuted?0:bgmVolume;
-    sfxGainNode.gain.value=audioMuted?0:sfxVolume;
+    bgmGainNode.gain.value=audioMuted?0:bgmVolume;sfxGainNode.gain.value=audioMuted?0:sfxVolume;
     bgmGainNode.connect(audioCtx.destination);sfxGainNode.connect(audioCtx.destination);
     startBGM();audioInitialized=true;
   }catch(e){}
@@ -866,10 +846,8 @@ document.getElementById("audio-content").addEventListener("click",e=>e.stopPropa
 document.getElementById("bgm-vol").addEventListener("input",function(){bgmVolume=this.value/100;if(bgmGainNode&&!audioMuted)bgmGainNode.gain.value=bgmVolume;});
 document.getElementById("sfx-vol").addEventListener("input",function(){sfxVolume=this.value/100;if(sfxGainNode&&!audioMuted)sfxGainNode.gain.value=sfxVolume;});
 document.getElementById("mute-all").addEventListener("change",function(){audioMuted=this.checked;if(bgmGainNode)bgmGainNode.gain.value=audioMuted?0:bgmVolume;if(sfxGainNode)sfxGainNode.gain.value=audioMuted?0:sfxVolume;});
-
 function applyTheme(t){currentTheme=t;document.body.className=t;}
 
-// Sort/filter buttons
 ["price","dmg","rng","dps"].forEach(m=>{
   document.getElementById("sort-"+m).addEventListener("click",()=>{
     shopSortMode=m;
@@ -887,10 +865,9 @@ function computeDPS(cfg){
 
 function buildShop(){
   let list=document.getElementById("shop-list");list.innerHTML="";
+  let floatList=document.getElementById("float-shop");floatList.innerHTML="";
   let keys=[...TOWER_KEYS];
-  // Filter
   if(shopFilter==="unlocked") keys=keys.filter(k=>unlockedTowers.has(k));
-  // Sort
   keys.sort((a,b)=>{
     let A=TOWER_TYPES[a],B=TOWER_TYPES[b];
     if(shopSortMode==="price")return A.cost-B.cost;
@@ -903,36 +880,39 @@ function buildShop(){
     let cfg=TOWER_TYPES[key];
     let locked=!unlockedTowers.has(key);
     let aff=gold>=cfg.cost;
-    let card=document.createElement("div");
-    card.className="tower-card"+(key===selectedTowerType?" sel":"")+(locked?" locked-card":"");
-    card.setAttribute("data-type",key);
-    card.innerHTML=`
-      ${locked?`<div class="lock-badge">🔒 Wave ${cfg.unlockWave}</div>`:""}
-      <div class="t-name-row">
-        <span>${cfg.emoji} ${cfg.name}</span>
-        <span class="t-cost ${aff&&!locked?"aff":"exp"}">$${cfg.cost}</span>
-      </div>
-      <div class="t-desc">${cfg.desc}</div>
-      <div class="t-stats">
-        <div class="ts-cell"><span class="ts-lbl">RNG</span><span>${cfg.range}</span></div>
-        <div class="ts-cell"><span class="ts-lbl">DMG</span><span>${cfg.damage}</span></div>
-        <div class="ts-cell"><span class="ts-lbl">DPS</span><span>${computeDPS(cfg)}</span></div>
-      </div>`;
-    if(!locked){
-      card.addEventListener("click",()=>{
-        if(gameIsOver||gameIsVictory)return;
-        initAudio();
-        if(selectedTowerType===key){selectedTowerType=null;card.classList.remove("sel");}
-        else{
-          document.querySelectorAll(".tower-card").forEach(b=>b.classList.remove("sel"));
-          selectedTowerType=key;selectedTowerObj=null;card.classList.add("sel");
-        }
-        updateUI();
-      });
-      // Touch support
-      card.addEventListener("touchstart",e=>{e.stopPropagation();},{ passive:true });
+    function makeCard(dest){
+      let card=document.createElement("div");
+      card.className="tower-card"+(key===selectedTowerType?" sel":"")+(locked?" locked-card":"");
+      card.setAttribute("data-type",key);
+      card.innerHTML=`
+        ${locked?`<div class="lock-badge">🔒 W${cfg.unlockWave}</div>`:""}
+        <div class="t-name-row">
+          <span>${cfg.emoji} ${cfg.name}</span>
+          <span class="t-cost ${aff&&!locked?"aff":"exp"}">$${cfg.cost}</span>
+        </div>
+        <div class="t-desc">${cfg.desc}</div>
+        <div class="t-stats">
+          <div class="ts-cell"><span class="ts-lbl">RNG</span><span>${cfg.range}</span></div>
+          <div class="ts-cell"><span class="ts-lbl">DMG</span><span>${cfg.damage}</span></div>
+          <div class="ts-cell"><span class="ts-lbl">DPS</span><span>${computeDPS(cfg)}</span></div>
+        </div>`;
+      if(!locked){
+        card.addEventListener("click",()=>{
+          if(gameIsOver||gameIsVictory)return;
+          initAudio();
+          if(selectedTowerType===key){selectedTowerType=null;}
+          else{
+            document.querySelectorAll(".tower-card").forEach(b=>b.classList.remove("sel"));
+            selectedTowerType=key;selectedTowerObj=null;
+          }
+          buildShop();updateUI();
+        });
+        card.addEventListener("touchstart",e=>{e.stopPropagation();},{passive:true});
+      }
+      dest.appendChild(card);
     }
-    list.appendChild(card);
+    makeCard(list);
+    makeCard(floatList); // duplicate for float shop
   });
 }
 
@@ -941,42 +921,37 @@ function buildShop(){
 // ============================================================
 function checkUnlocks(){
   const unlockTable={
-    barrier:3,gold_mine:3,poison:6,antiair:6,mortar:7,flamethrower:9,
-    laser:8,tesla:5,missile:11,railgun:12,cryo_cannon:12,chain_lightning:13,
-    shockwave:14,multi_mortar:15,gatling:16,inferno_tower:17,time_warp:19,
-    sniper_nest:20,poison_rain:10,plasma:10,earthquake:22,
-    beam_cannon:24,nuke:25,oracle:18
+    scatter_gun:0,spike_trap:1,volt_tower:2,gold_mine:3,barrier:4,needle:4,
+    tesla:5,poison:6,antiair:6,ice_wall:6,mortar:7,laser:8,arc_tower:8,
+    flamethrower:9,plasma:10,poison_rain:10,missile:11,railgun:12,cryo_cannon:12,
+    chain_lightning:13,shockwave:14,multi_mortar:15,gatling:16,gravity_well:16,
+    inferno_tower:17,oracle:18,time_warp:19,sniper_nest:20,earthquake:22,
+    beam_cannon:24,nuke:25
   };
   let newUnlocks=[];
   Object.entries(unlockTable).forEach(([key,wv])=>{
-    if(wave>=wv&&!unlockedTowers.has(key)){
-      unlockedTowers.add(key);
-      newUnlocks.push(TOWER_TYPES[key].name);
-    }
+    if(wave>=wv&&!unlockedTowers.has(key)){unlockedTowers.add(key);newUnlocks.push(TOWER_TYPES[key].name);}
   });
-  if(newUnlocks.length>0){
-    showUnlockNotif("🔓 Unlocked: "+newUnlocks.join(", "));
-    buildShop();
-  }
+  if(newUnlocks.length>0){showUnlockNotif("Unlocked: "+newUnlocks.join(", "));buildShop();}
 }
-
 function showUnlockNotif(msg){
-  let el=document.createElement("div");
-  el.className="unlock-notif";el.textContent=msg;
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),3800);
+  let el=document.createElement("div");el.className="unlock-notif";el.textContent="🔓 "+msg;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3800);
 }
 
 // ============================================================
-// CANVAS INPUT (Mouse + Touch)
+// CANVAS INPUT — coordinate scaling
 // ============================================================
 function getCoords(e){
   let r=canvas.getBoundingClientRect();
   let cx,cy;
-  if(e.touches){
-    cx=e.touches[0].clientX;cy=e.touches[0].clientY;
-  }else{cx=e.clientX;cy=e.clientY;}
-  return{x:(cx-r.left)*(canvas.width/r.width),y:(cy-r.top)*(canvas.height/r.height)};
+  if(e.touches&&e.touches.length>0){cx=e.touches[0].clientX;cy=e.touches[0].clientY;}
+  else if(e.changedTouches&&e.changedTouches.length>0){cx=e.changedTouches[0].clientX;cy=e.changedTouches[0].clientY;}
+  else{cx=e.clientX;cy=e.clientY;}
+  // Scale from CSS px to logical canvas px
+  let scaleX=GAME_W/r.width;
+  let scaleY=GAME_H/r.height;
+  return{x:(cx-r.left)*scaleX, y:(cy-r.top)*scaleY};
 }
 
 canvas.addEventListener("mousemove",e=>{let c=getCoords(e);mouseX=c.x;mouseY=c.y;isMouseOnCanvas=true;});
@@ -987,9 +962,9 @@ function handleCanvasAction(e){
   e.preventDefault();
   initAudio();
   let c=getCoords(e);
-  // Check tower click/tap
+  // First check if tapping an existing tower
   for(let t of towers){
-    if(Math.hypot(t.x-c.x,t.y-c.y)<(TOWER_TYPES[t.type].towerSize||20)+6){
+    if(Math.hypot(t.x-c.x,t.y-c.y)<(TOWER_TYPES[t.type].towerSize||20)+10){
       selectedTowerType=null;selectedTowerObj=t;
       document.querySelectorAll(".tower-card").forEach(b=>b.classList.remove("sel"));
       updateUI();return;
@@ -998,11 +973,9 @@ function handleCanvasAction(e){
   if(selectedTowerType){
     let cfg=TOWER_TYPES[selectedTowerType];
     if(gold<cfg.cost){createFloatText("Not enough gold!",c.x,c.y-20,"#f56565");return;}
-    if(isOnPath(c.x,c.y,38)){createFloatText("Can't build on path!",c.x,c.y-20,"#f56565");return;}
-    if(isOnDecoration(c.x,c.y)){createFloatText("Blocked by obstacle!",c.x,c.y-20,"#f56565");return;}
-    for(let t of towers){
-      if(Math.hypot(t.x-c.x,t.y-c.y)<50){createFloatText("Too close to tower!",c.x,c.y-20,"#f56565");return;}
-    }
+    if(isOnPath(c.x,c.y,42)){createFloatText("Can't build on path!",c.x,c.y-20,"#f56565");return;}
+    if(isOnDecoration(c.x,c.y)){createFloatText("Blocked!",c.x,c.y-20,"#f56565");return;}
+    for(let t of towers){if(Math.hypot(t.x-c.x,t.y-c.y)<55){createFloatText("Too close!",c.x,c.y-20,"#f56565");return;}}
     towers.push({x:c.x,y:c.y,type:selectedTowerType,angle:0,cooldown:0,priority:"first",upgrades:[],recoil:0,id:Math.random()});
     gold-=cfg.cost;createParticles(c.x,c.y,cfg.color,8);updateUI();
   }else{
@@ -1018,22 +991,20 @@ canvas.addEventListener("touchstart",e=>{
 },{passive:false});
 canvas.addEventListener("touchmove",e=>{
   e.preventDefault();
-  let c=getCoords(e);mouseX=c.x;mouseY=c.y;
+  if(e.touches.length>0){let c=getCoords(e);mouseX=c.x;mouseY=c.y;}
 },{passive:false});
-canvas.addEventListener("touchend",e=>{e.preventDefault();},{passive:false});
+canvas.addEventListener("touchend",e=>{e.preventDefault();isMouseOnCanvas=false;},{passive:false});
 
 // ============================================================
 // PATH & DECORATIONS
 // ============================================================
 function isOnPath(px,py,r){
   let pts=MAPS[currentMapIndex].path;
-  for(let i=0;i<pts.length-1;i++){
-    if(ptSegDist(px,py,pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y)<(r+22))return true;
-  }
+  for(let i=0;i<pts.length-1;i++){if(ptSegDist(px,py,pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y)<(r+24))return true;}
   return false;
 }
 function isOnDecoration(px,py){
-  for(let d of environmentDecorations){if(Math.hypot(d.x-px,d.y-py)<d.size+16)return true;}
+  for(let d of environmentDecorations){if(Math.hypot(d.x-px,d.y-py)<d.size+18)return true;}
   return false;
 }
 function ptSegDist(x,y,x1,y1,x2,y2){
@@ -1052,9 +1023,8 @@ function updateUI(){
   document.getElementById("gv").innerText=gold;
   let tgt=m.targetWaves===Infinity?"∞":m.targetWaves;
   document.getElementById("wv").innerText=`${wave}/${tgt}`;
-  document.getElementById("sv").innerText=score;
-  document.getElementById("game-title").innerText=m.name+" — 2D Tower Defense";
-  // Progress
+  document.getElementById("sv2").innerText=score;
+  document.getElementById("game-title").innerText=m.name+" — Tower Defense";
   if(m.targetWaves!==Infinity){
     let pct=Math.min(100,(wave/m.targetWaves)*100);
     document.getElementById("map-prog-fill").style.width=pct+"%";
@@ -1064,7 +1034,6 @@ function updateUI(){
     document.getElementById("map-prog-lbl").innerText="Endless";
   }
   document.getElementById("wave-rdy").style.display=(!waveInProgress&&!gameIsOver&&!gameIsVictory)?"inline-flex":"none";
-  // Refresh shop cost colors
   document.querySelectorAll(".tower-card").forEach(btn=>{
     let type=btn.getAttribute("data-type");
     let cfg=TOWER_TYPES[type];
@@ -1081,18 +1050,9 @@ function updateUI(){
     let frText=fr===1?"Continuous":(fr/60).toFixed(2)+"s";
     let dps=cfg.fireRate===1?(dmg).toFixed(1):(dmg/(fr/60)).toFixed(1);
     panel.style.display="flex";
-    // Smart positioning
-    let pw=210,ph=280;
-    let px=t.x+30,py=t.y-ph/2;
-    let cw=canvas.width,ch=canvas.height;
-    if(px+pw>cw-10)px=t.x-pw-10;
-    if(px<4)px=4;
-    if(py<4)py=4;
-    if(py+ph>ch-10)py=ch-ph-10;
-    panel.style.left=px+"px";panel.style.top=py+"px";
     document.getElementById("cfg-title").innerText=`${cfg.emoji} ${cfg.name}`;
     document.getElementById("cfg-stats").innerHTML=
-      `<div>⚡ Dmg: <b>${dmg}</b> | 📊 DPS: <b>${dps}</b></div><div>🎯 Range: <b>${rng}px</b></div><div>⏱️ Rate: <b>${frText}</b></div>`;
+      `<div>Dmg: <b>${dmg}</b> | DPS: <b>${dps}</b></div><div>Range: <b>${rng}px</b></div><div>Rate: <b>${frText}</b></div>`;
     document.getElementById("pri-sel").value=t.priority||"first";
     let sv=Math.floor(cfg.cost*0.6);
     (t.upgrades||[]).forEach(u=>sv+=Math.floor(u.cost*0.3));
@@ -1110,8 +1070,7 @@ function renderUpgrades(t){
   cfg.upgrades.forEach((track,ti)=>{
     let done=(t.upgrades||[]).filter(u=>u.track===ti).length;
     let div=document.createElement("div");div.className="upg-track";
-    let lbl=document.createElement("div");lbl.className="upg-label";
-    lbl.innerText=`Path ${ti+1} (${done}/4)`;div.appendChild(lbl);
+    let lbl=document.createElement("div");lbl.className="upg-label";lbl.innerText=`Path ${ti+1} (${done}/4)`;div.appendChild(lbl);
     let dots=document.createElement("div");dots.className="upg-dots";
     for(let i=0;i<4;i++){
       let d=document.createElement("div");d.className="udot";
@@ -1123,21 +1082,20 @@ function renderUpgrades(t){
     div.appendChild(dots);
     if(done<4){
       let nu=track[done];
-      let btn=document.createElement("button");
-      btn.className="ubtn";btn.disabled=gold<nu.cost;
+      let btn=document.createElement("button");btn.className="ubtn";btn.disabled=gold<nu.cost;
       btn.innerText=`${nu.name}: ${nu.desc} ($${nu.cost})`;
       btn.addEventListener("click",()=>{
         if(gold<nu.cost)return;
         gold-=nu.cost;nu.fn(t);
         if(!t.upgrades)t.upgrades=[];
         t.upgrades.push({track:ti,cost:nu.cost,name:nu.name});
-        createFloatText(`↑ ${nu.name}!`,t.x,t.y-32,"#ed8936");
+        createFloatText(`${nu.name}!`,t.x,t.y-32,"#ed8936");
         updateUI();
       });
       div.appendChild(btn);
     }else{
-      let d=document.createElement("div");d.style.cssText="font-size:10px;color:#48bb78;font-weight:700;";
-      d.innerText="✅ Maxed!";div.appendChild(d);
+      let d=document.createElement("div");d.style.cssText="font-size:9px;color:#48bb78;font-weight:700;";
+      d.innerText="Maxed!";div.appendChild(d);
     }
     panel.appendChild(div);
   });
@@ -1152,8 +1110,7 @@ document.getElementById("sell-btn").addEventListener("click",()=>{
   let cfg=TOWER_TYPES[selectedTowerObj.type];
   let sv=Math.floor(cfg.cost*0.6);
   (selectedTowerObj.upgrades||[]).forEach(u=>sv+=Math.floor(u.cost*0.3));
-  gold+=sv;
-  towers.splice(towers.indexOf(selectedTowerObj),1);
+  gold+=sv;towers.splice(towers.indexOf(selectedTowerObj),1);
   selectedTowerObj=null;updateUI();
 });
 document.getElementById("btn-wave").addEventListener("click",()=>{initAudio();if(!gameIsOver&&!gameIsVictory)triggerNextWave();});
@@ -1173,21 +1130,16 @@ document.getElementById("btn-desel").addEventListener("click",()=>{
 });
 document.getElementById("btn-restart").addEventListener("click",()=>resetGame(false));
 document.getElementById("btn-menu").addEventListener("click",()=>resetGame(false));
-document.getElementById("btn-next").addEventListener("click",()=>{
-  if(currentMapIndex<MAPS.length-1)currentMapIndex++;
-  startMap();
-});
+document.getElementById("btn-next").addEventListener("click",()=>{if(currentMapIndex<MAPS.length-1)currentMapIndex++;startMap();});
 
 // Save UI
 document.getElementById("btn-saves").addEventListener("click",()=>{renderSaves();document.getElementById("save-panel").style.display="block";});
 document.getElementById("save-close").addEventListener("click",()=>{document.getElementById("save-panel").style.display="none";});
 document.getElementById("btn-save-now").addEventListener("click",()=>{
-  for(let i=0;i<10;i++){if(!getSaveInfo(i)){saveGame(i);renderSaves();showBanner("Game Saved!");return;}}
+  for(let i=0;i<10;i++){if(!getSaveInfo(i)){saveGame(i);renderSaves();showBanner("Saved!");return;}}
   saveGame(0);renderSaves();showBanner("Slot 1 overwritten!");
 });
-document.getElementById("btn-new-game").addEventListener("click",()=>{
-  resetGame(false);document.getElementById("save-panel").style.display="none";
-});
+document.getElementById("btn-new-game").addEventListener("click",()=>{resetGame(false);document.getElementById("save-panel").style.display="none";});
 
 function renderSaves(){
   let list=document.getElementById("save-list");list.innerHTML="";
@@ -1198,14 +1150,14 @@ function renderSaves(){
       let d=new Date(info.timestamp);
       let ds=d.toLocaleDateString()+" "+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
       let mn=MAPS[info.currentMapIndex]?.name||"?";
-      div.innerHTML=`<div style="flex:1;"><div style="font-size:12px;font-weight:700;">Slot ${i+1}: ${mn}</div><div style="font-size:10px;opacity:0.6;">Wave ${info.wave} · Score ${info.score||0} · ${ds}</div></div>
+      div.innerHTML=`<div style="flex:1;"><div style="font-size:11px;font-weight:700;">Slot ${i+1}: ${mn}</div><div style="font-size:9px;opacity:0.6;">Wave ${info.wave} · Score ${info.score||0} · ${ds}</div></div>
         <div class="s-slot-btns">
           <button onclick="loadSlot(${i})" style="background:#3b82f6;color:#fff;border:none;">Load</button>
           <button onclick="saveSlot(${i})" style="background:#48bb78;color:#fff;border:none;">Save</button>
-          <button onclick="delSlot(${i})" style="background:#ef4444;color:#fff;border:none;">✕</button>
+          <button onclick="delSlot(${i})" style="background:#ef4444;color:#fff;border:none;">X</button>
         </div>`;
     }else{
-      div.innerHTML=`<div style="flex:1;font-size:11px;opacity:0.4;">— Empty Slot ${i+1} —</div>
+      div.innerHTML=`<div style="flex:1;font-size:10px;opacity:0.4;">Empty Slot ${i+1}</div>
         <div class="s-slot-btns"><button onclick="saveSlot(${i})" style="background:#48bb78;color:#fff;border:none;">Save Here</button></div>`;
     }
     list.appendChild(div);
@@ -1215,7 +1167,6 @@ window.loadSlot=i=>{if(loadGame(i)){document.getElementById("save-panel").style.
 window.saveSlot=i=>{saveGame(i);renderSaves();showBanner(`Saved to Slot ${i+1}`);};
 window.delSlot=i=>{deleteSave(i);renderSaves();};
 
-// Map panel
 document.getElementById("btn-maps").addEventListener("click",()=>{renderMapPanel();document.getElementById("map-panel").style.display="block";});
 document.getElementById("map-close").addEventListener("click",()=>{document.getElementById("map-panel").style.display="none";});
 
@@ -1226,16 +1177,11 @@ function renderMapPanel(){
     let beaten=beatMaps.has(i);
     let card=document.createElement("div");
     card.className="map-card"+(unlocked?" unlocked":" locked-map")+(beaten?" beaten":"");
-    card.innerHTML=`<div class="map-num">Map ${i+1}/${MAPS.length}</div>
+    card.innerHTML=`<div class="map-num">Map ${i+1}</div>
       <div class="map-name">${m.name}</div>
       <div class="map-status">${beaten?"✅ Beaten":unlocked?"🔓 Available":"🔒 Locked"}</div>
-      ${beaten?`<div style="font-size:10px;opacity:0.6;margin-top:2px;">${m.targetWaves===Infinity?"Endless":""+m.targetWaves+" waves"}</div>`:""}`;
-    if(unlocked){
-      card.addEventListener("click",()=>{
-        currentMapIndex=i;startMap();
-        document.getElementById("map-panel").style.display="none";
-      });
-    }
+      <div style="font-size:9px;opacity:0.6;margin-top:2px;">${m.targetWaves===Infinity?"Endless":m.targetWaves+" waves"} · Start $${m.startGold}</div>`;
+    if(unlocked){card.addEventListener("click",()=>{currentMapIndex=i;startMap();document.getElementById("map-panel").style.display="none";});}
     grid.appendChild(card);
   });
 }
@@ -1246,23 +1192,23 @@ function renderMapPanel(){
 function generateDecorations(){
   environmentDecorations.length=0;grassTufts.length=0;pebbles.length=0;
   let m=MAPS[currentMapIndex];
-  for(let i=0;i<55;i++){let px=Math.random()*1200,py=Math.random()*720;if(!isOnPath(px,py,20))pebbles.push({x:px,y:py,size:Math.random()*2+0.8});}
+  for(let i=0;i<70;i++){let px=Math.random()*GAME_W,py=Math.random()*GAME_H;if(!isOnPath(px,py,22))pebbles.push({x:px,y:py,size:Math.random()*2.5+1});}
   if(m.decorType!=="rock"){
-    for(let gx=30;gx<1200;gx+=52){
-      for(let gy=30;gy<720;gy+=52){
-        let rx=gx+Math.random()*24-12,ry=gy+Math.random()*24-12;
-        if(!isOnPath(rx,ry,30)){
-          let bl=[];for(let b=0;b<4+Math.floor(Math.random()*3);b++)bl.push({dx:Math.random()*10-5,dy:-(Math.random()*9+5),curve:Math.random()*7-3.5});
+    for(let gx=35;gx<GAME_W;gx+=55){
+      for(let gy=35;gy<GAME_H;gy+=55){
+        let rx=gx+Math.random()*26-13,ry=gy+Math.random()*26-13;
+        if(!isOnPath(rx,ry,32)){
+          let bl=[];for(let b=0;b<4+Math.floor(Math.random()*3);b++)bl.push({dx:Math.random()*11-5.5,dy:-(Math.random()*10+5),curve:Math.random()*8-4});
           grassTufts.push({x:rx,y:ry,blades:bl});
         }
       }
     }
   }
-  for(let i=0;i<65;i++){
-    for(let a=0;a<120;a++){
-      let rx=Math.random()*(1200-80)+40,ry=Math.random()*(720-80)+40;
-      if(!isOnPath(rx,ry,65)&&!towers.some(t=>Math.hypot(t.x-rx,t.y-ry)<50)){
-        environmentDecorations.push({x:rx,y:ry,size:Math.random()*13+14,color:m.decorColor,type:m.decorType,seed:Math.random()*100});
+  for(let i=0;i<70;i++){
+    for(let a=0;a<130;a++){
+      let rx=Math.random()*(GAME_W-90)+45,ry=Math.random()*(GAME_H-90)+45;
+      if(!isOnPath(rx,ry,70)&&!towers.some(t=>Math.hypot(t.x-rx,t.y-ry)<55)){
+        environmentDecorations.push({x:rx,y:ry,size:Math.random()*14+15,color:m.decorColor,type:m.decorType,seed:Math.random()*100});
         break;
       }
     }
@@ -1275,8 +1221,7 @@ function generateDecorations(){
 function triggerNextWave(){
   if(waveInProgress)return;
   wave++;waveInProgress=true;waveActive=true;
-  checkUnlocks();
-  updateUI();showBanner(`WAVE ${wave} INCOMING!`);
+  checkUnlocks();updateUI();showBanner(`WAVE ${wave}`);
   let baseCount=6+wave*3;
   let hpScale=Math.pow(1.24,wave-1);
   baseSpawnDelay=Math.max(7,48-wave*1.4);
@@ -1300,23 +1245,19 @@ function triggerNextWave(){
 // ============================================================
 // RESET / START
 // ============================================================
-function resetGame(keepMap){
-  if(!keepMap)currentMapIndex=0;
-  startMap();
-}
+function resetGame(keepMap){if(!keepMap)currentMapIndex=0;startMap();}
 function startMap(){
   let m=MAPS[currentMapIndex];
   playerHp=m.startHp;gold=m.startGold;wave=0;score=0;
   selectedTowerObj=null;selectedTowerType=null;
   document.querySelectorAll(".tower-card").forEach(b=>b.classList.remove("sel"));
-  resetArrays(true);
-  generateDecorations();buildShop();updateUI();
+  resetArrays(true);generateDecorations();buildShop();updateUI();
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
-function showBanner(txt){bannerText=txt;bannerTimer=100;}
+function showBanner(txt){bannerText=txt;bannerTimer=90;}
 function createFloatText(txt,x,y,color="#fff"){floatingTexts.push({text:txt,x,y,color,life:55});}
 function createParticles(x,y,color,n=12,scl=1){
   for(let i=0;i<n;i++){
@@ -1326,16 +1267,14 @@ function createParticles(x,y,color,n=12,scl=1){
 }
 function createMuzzle(x,y,ang,type){
   let cfg=TOWER_TYPES[type];
-  muzzleFlashes.push({x,y,angle:ang,size:cfg.barrelW*2.2,color:cfg.muzzleColor||"#ffaa00",life:5,maxLife:5});
+  muzzleFlashes.push({x,y,angle:ang,size:cfg.barrelW*2.4,color:cfg.muzzleColor||"#ffaa00",life:5,maxLife:5});
 }
 function getOracleMult(tx,ty){
   let mult=1;
   towers.forEach(o=>{
     if(!TOWER_TYPES[o.type].isOracle)return;
     let rng=TOWER_TYPES.oracle.range*(o.rangeMult||1);
-    if(o.globalAura||Math.hypot(o.x-tx,o.y-ty)<=rng){
-      let m=o.auraMult||1.3;if(o.godEye)m*=3;mult*=m;
-    }
+    if(o.globalAura||Math.hypot(o.x-tx,o.y-ty)<=rng){let m=o.auraMult||1.3;if(o.godEye)m*=3;mult*=m;}
   });
   return mult;
 }
@@ -1358,7 +1297,7 @@ function getGoldMineBonus(ex,ey,reward){
   towers.forEach(o=>{
     if(!TOWER_TYPES[o.type].isOracle||!o.goldAura)return;
     let rng=TOWER_TYPES.oracle.range*(o.rangeMult||1);
-    if(o.goldAuraGlobal||o.goldAuraGlobal||Math.hypot(o.x-ex,o.y-ey)<=rng)bonus+=o.goldAura;
+    if(o.goldAuraGlobal||Math.hypot(o.x-ex,o.y-ey)<=rng)bonus+=o.goldAura;
   });
   return bonus;
 }
@@ -1369,7 +1308,6 @@ function getGoldMineBonus(ex,ey,reward){
 function updateLogic(){
   if(bannerTimer>0)bannerTimer--;
   internalTicker++;
-
   // Spawn
   if(waveInProgress&&waveSpawnQueue.length>0){
     spawnCooldown--;
@@ -1381,11 +1319,9 @@ function updateLogic(){
         speed:nz.typeData.speed,color:nz.typeData.color,reward:nz.typeData.reward,
         size:nz.typeData.size,type:nz.typeData.type,phase:nz.typeData.phase||false,
         armor:nz.typeData.armor||0,pathIdx:0,dist:0,
-        slowTimer:0,slowMult:1,burnTimer:0,burnDmg:0,poisonTimer:0,poisonDmg:0,
-        stunTimer:0,id:Math.random()});
+        slowTimer:0,slowMult:1,burnTimer:0,burnDmg:0,poisonTimer:0,poisonDmg:0,stunTimer:0,id:Math.random()});
     }
   }
-
   // Move enemies
   let pts=MAPS[currentMapIndex].path;
   for(let i=enemies.length-1;i>=0;i--){
@@ -1397,18 +1333,16 @@ function updateLogic(){
     if(e.hp<=0){killEnemy(i,e);continue;}
     let spd=e.speed*e.slowMult;
     let tgt=pts[e.pathIdx+1];
-    if(!tgt){playerHp--;createFloatText("−1 HP ❤️",e.x,e.y,"#f56565");enemies.splice(i,1);updateUI();if(playerHp<=0)checkGameOver();continue;}
+    if(!tgt){playerHp--;createFloatText("-1 HP",e.x,e.y,"#f56565");enemies.splice(i,1);updateUI();if(playerHp<=0)checkGameOver();continue;}
     let dx=tgt.x-e.x,dy=tgt.y-e.y,d=Math.hypot(dx,dy);
-    if(d<=spd){e.x=tgt.x;e.y=tgt.y;e.pathIdx++;}
-    else{e.x+=dx/d*spd;e.y+=dy/d*spd;}
+    if(d<=spd){e.x=tgt.x;e.y=tgt.y;e.pathIdx++;}else{e.x+=dx/d*spd;e.y+=dy/d*spd;}
     e.dist+=spd;
   }
-
   // Barrier/TimeWarp
   towers.forEach(t=>{
     let cfg=TOWER_TYPES[t.type];
     if(!cfg.isBarrier&&!cfg.isGoldMine)return;
-    if(cfg.isGoldMine)return; // gold mine handled on kill
+    if(cfg.isGoldMine)return;
     let rng=cfg.range*(t.rangeMult||1);
     let slow=t.barrierSlow||0.55;
     enemies.forEach(e=>{
@@ -1416,13 +1350,12 @@ function updateLogic(){
         e.slowTimer=5;e._slowPow=slow;
         if(t.barrierDmg)e.hp-=t.barrierDmg/60;
         if(t.barrierKill)e.hp=0;
-        if(t.timeStop){e.stunTimer=5;}
+        if(t.timeStop)e.stunTimer=5;
         if(t.barrierStun&&internalTicker%t.barrierStun===0)e.stunTimer=60;
-        if(t.timeRewind){e.x-=0.3;} // minor pushback
+        if(t.timeRewind){e.x-=0.3;}
       }
     });
   });
-
   // Towers fire
   towers.forEach(t=>{
     let cfg=TOWER_TYPES[t.type];
@@ -1432,7 +1365,7 @@ function updateLogic(){
     let rng=cfg.range*(t.rangeMult||1);
     let om=getOracleMult(t.x,t.y);
     let or2=getOracleRate(t.x,t.y);
-    let minDist=(cfg.isMortar||cfg.isMultiMortar)?100:0;
+    let minDist=(cfg.isMortar||cfg.isMultiMortar)?110:0;
     let vt=enemies.filter(e=>{let d=Math.hypot(e.x-t.x,e.y-t.y);return d<=rng&&d>=minDist;});
     if(!vt.length)return;
     if(t.priority==="first")vt.sort((a,b)=>b.dist-a.dist);
@@ -1444,7 +1377,6 @@ function updateLogic(){
     t.angle=Math.atan2(tgt.y-t.y,tgt.x-t.x);
     let efr=Math.round((cfg.fireRate*(t.rateMult||1))*or2);
     let dmgBase=(cfg.damage*(t.dmgMult||1))*om;
-    // Multi-mortar burst handling
     if(cfg.isMultiMortar){
       if(t.cooldown>0)return;
       t.cooldown=efr;t.recoil=8;
@@ -1452,39 +1384,35 @@ function updateLogic(){
       playSFX("mortar");
       let shots=t.multiShot||1;
       for(let s=0;s<shots;s++){
-        let tx2=tgt.x+(s*50*(Math.random()-0.5)),ty2=tgt.y+(s*50*(Math.random()-0.5));
-        projectiles.push({x:t.x,y:t.y,tx:tx2,ty:ty2,target:tgt,speed:2.5,damage:dmgBase,type:t.type,
-          isAoE:true,splashR:(cfg.splashR||130)*(t.splashMult||1),life:0,
-          burn:t.burn,empSlow:t.empSlow,stunDur:t.stunDur});
+        let tx2=tgt.x+(s*55*(Math.random()-0.5)),ty2=tgt.y+(s*55*(Math.random()-0.5));
+        projectiles.push({x:t.x,y:t.y,tx:tx2,ty:ty2,target:tgt,speed:2.8,damage:dmgBase,type:t.type,
+          isAoE:true,splashR:(cfg.splashR||145)*(t.splashMult||1),life:0,burn:t.burn,empSlow:t.empSlow,stunDur:t.stunDur});
       }
       return;
     }
-    // Laser continuous
     if(cfg.isLaser){
       let dmg=dmgBase;
       tgt.hp-=dmg;
-      if(t.laserBounce){let prev=tgt;for(let b=0;b<(t.laserBounce||0);b++){let cl=enemies.filter(e=>e!==prev&&Math.hypot(e.x-prev.x,e.y-prev.y)<130);if(!cl.length)break;cl.sort((a,b2)=>Math.hypot(a.x-prev.x,a.y-prev.y)-Math.hypot(b2.x-prev.x,b2.y-prev.y));cl[0].hp-=dmg*0.65;prev=cl[0];}}
+      if(t.laserBounce){let prev=tgt;for(let b=0;b<(t.laserBounce||0);b++){let cl=enemies.filter(e=>e!==prev&&Math.hypot(e.x-prev.x,e.y-prev.y)<140);if(!cl.length)break;cl.sort((a,b2)=>Math.hypot(a.x-prev.x,a.y-prev.y)-Math.hypot(b2.x-prev.x,b2.y-prev.y));cl[0].hp-=dmg*0.65;prev=cl[0];}}
       if(t.burn){tgt.burnTimer=120;tgt.burnDmg=t.burn;}
       if(t.armorShred)tgt.armor=Math.max(0,(tgt.armor||0)-t.armorShred);
       if(internalTicker%15===0)playSFX("laser");
       if(tgt.hp<=0)killEnemy(enemies.indexOf(tgt),tgt);
       return;
     }
-    // Flame continuous
     if(cfg.isFlame){
       vt.slice(0,t.flameCone?6:1).forEach(e=>{
-        let dmg=dmgBase;e.hp-=dmg;
+        e.hp-=dmgBase;
         if(t.burn){e.burnTimer=180;e.burnDmg=t.burn;}
         if(e.hp<=0)killEnemy(enemies.indexOf(e),e);
       });
       if(internalTicker%8===0)playSFX("flamethrower");
       if(graphicsPreset!=="low"){
         let bx=t.x+Math.cos(t.angle)*cfg.barrelLen,by=t.y+Math.sin(t.angle)*cfg.barrelLen;
-        particles.push({x:bx,y:by,vx:Math.cos(t.angle)*3.5+Math.random()*2-1,vy:Math.sin(t.angle)*3.5+Math.random()*2-1,size:Math.random()*14+7,color:`hsl(${Math.random()*30+10},100%,55%)`,life:13});
+        particles.push({x:bx,y:by,vx:Math.cos(t.angle)*3.8+Math.random()*2-1,vy:Math.sin(t.angle)*3.8+Math.random()*2-1,size:Math.random()*16+8,color:`hsl(${Math.random()*30+10},100%,55%)`,life:14});
       }
       return;
     }
-    // Poison
     if(cfg.isPoison){
       if(t.cooldown>0)return;
       t.cooldown=efr;t.recoil=6;
@@ -1504,38 +1432,35 @@ function updateLogic(){
     let bx=t.x+Math.cos(t.angle)*cfg.barrelLen,by=t.y+Math.sin(t.angle)*cfg.barrelLen;
     createMuzzle(bx,by,t.angle,t.type);
     playSFX(t.type);
-    if(cfg.isTesla){
-      fireTesla(t,tgt,dmgBase);
-    }else if(cfg.isRailgun){
-      fireRailgun(t,dmgBase);
-    }else if(cfg.isPlasma||cfg.isMortar||cfg.isShockwave||cfg.isNuke){
+    if(cfg.isTesla||t.isTesla2){fireTesla(t,tgt,dmgBase);}
+    else if(cfg.isRailgun){fireRailgun(t,dmgBase);}
+    else if(cfg.isPlasma||cfg.isMortar||cfg.isShockwave||cfg.isNuke){
       let shots=t.multiShot||1;
       for(let s=0;s<shots;s++){
-        let tx2=tgt.x+(s*45*Math.random()),ty2=tgt.y+(s*45*Math.random());
-        projectiles.push({x:bx,y:by,tx:tx2,ty:ty2,target:tgt,speed:cfg.isNuke?2.5:5,damage:dmgBase,type:t.type,
-          isAoE:true,splashR:(cfg.splashR||100)*(t.splashMult||1),life:0,burn:t.burn,empSlow:t.empSlow,stunDur:t.stunDur});
+        let tx2=tgt.x+(s*48*Math.random()),ty2=tgt.y+(s*48*Math.random());
+        projectiles.push({x:bx,y:by,tx:tx2,ty:ty2,target:tgt,speed:cfg.isNuke?2.8:5.5,damage:dmgBase,type:t.type,
+          isAoE:true,splashR:(cfg.splashR||110)*(t.splashMult||1),life:0,burn:t.burn,empSlow:t.empSlow,stunDur:t.stunDur});
       }
     }else{
       let shots=t.multiShot||1;
       for(let s=0;s<shots;s++){
         let tE=vt[Math.min(s,vt.length-1)]||tgt;
         projectiles.push({x:bx,y:by,target:tE,tx:tE.x,ty:tE.y,
-          speed:t.type==="sniper"||t.type==="sniper_nest"?18:t.type==="antiair"?14:9,
+          speed:t.type==="sniper"||t.type==="sniper_nest"||t.type==="needle"?20:t.type==="antiair"?15:10,
           damage:dmgBase,type:t.type,isFrost:cfg.isFrost,slowPower:t.slowPower,slowDur:t.slowDuration||75,
-          isMissile:cfg.isMissile,splashR:t.splashR||(cfg.isMissile?90:0),
+          isMissile:cfg.isMissile,splashR:t.splashR||(cfg.isMissile?100:0),
           burn:t.burn,armorPierce:t.armorPierce||0,armorShred:t.armorShred||0,
           headshot:t.headshot,executeThresh:t.executeThresh,stunDur:t.stunDur,life:0});
       }
     }
   });
-
   // Move projectiles
   for(let i=projectiles.length-1;i>=0;i--){
     let p=projectiles[i];p.life++;
     let tx=p.tx,ty=p.ty;
     if(enemies.includes(p.target)){tx=p.target.x;ty=p.target.y;p.tx=tx;p.ty=ty;}
     let dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);
-    if(d<=p.speed||p.life>500){
+    if(d<=p.speed||p.life>600){
       if(p.isAoE){triggerAoE(p.x,p.y,p.splashR,p.damage,p.type,p.burn,p.empSlow,p.stunDur);}
       else if(enemies.includes(p.target)){
         let e=p.target;
@@ -1554,18 +1479,16 @@ function updateLogic(){
       projectiles.splice(i,1);
     }else{p.x+=dx/d*p.speed;p.y+=dy/d*p.speed;}
   }
-
   // Particles, texts, flashes
   for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.06;p.life--;if(p.life<=0)particles.splice(i,1);}
   for(let i=floatingTexts.length-1;i>=0;i--){let f=floatingTexts[i];f.y-=0.5;f.life--;if(f.life<=0)floatingTexts.splice(i,1);}
   for(let i=muzzleFlashes.length-1;i>=0;i--){muzzleFlashes[i].life--;if(muzzleFlashes[i].life<=0)muzzleFlashes.splice(i,1);}
   for(let i=lightningVisuals.length-1;i>=0;i--){lightningVisuals[i].life--;if(lightningVisuals[i].life<=0)lightningVisuals.splice(i,1);}
-
   // Wave complete
   if(waveInProgress&&enemies.length===0&&waveSpawnQueue.length===0){
     waveInProgress=false;
     let bonus=150+wave*20;gold+=bonus;score+=bonus;
-    createFloatText(`Wave ${wave} Done! +$${bonus}`,canvas.width/2,100,"#48bb78");
+    createFloatText(`Wave ${wave} Done! +$${bonus}`,GAME_W/2,100,"#48bb78");
     checkUnlocks();
     let m=MAPS[currentMapIndex];
     if(wave>=m.targetWaves&&m.targetWaves!==Infinity){
@@ -1586,14 +1509,13 @@ function killEnemy(idx,e){
   if(idx<0||idx>=enemies.length)return;
   let bonus=getGoldMineBonus(e.x,e.y,e.reward);
   gold+=e.reward+bonus;score+=e.reward*2;
-  if(bonus>0)createFloatText(`+$${e.reward+bonus}💎`,e.x,e.y-14,"#fbbf24");
+  if(bonus>0)createFloatText(`+$${e.reward+bonus}`,e.x,e.y-14,"#fbbf24");
   else createFloatText(`+$${e.reward}`,e.x,e.y-14,"#48bb78");
   createParticles(e.x,e.y,e.color,10);
   enemies.splice(idx,1);updateUI();
 }
-
 function triggerAoE(x,y,r,dmg,type,burn,empSlow,stunDur){
-  createParticles(x,y,type==="nuke"?"#ef4444":"#ff4500",40,2.5);
+  createParticles(x,y,type==="nuke"?"#ef4444":"#ff4500",50,2.8);
   for(let i=enemies.length-1;i>=0;i--){
     let e=enemies[i];
     if(Math.hypot(e.x-x,e.y-y)<=r){
@@ -1605,12 +1527,11 @@ function triggerAoE(x,y,r,dmg,type,burn,empSlow,stunDur){
     }
   }
 }
-
 function fireTesla(t,firstTarget,dmg){
   let cfg=TOWER_TYPES[t.type];
   let cc=(cfg.chainCount||5)+(t.chainBonus||0);
   if(t.globalChain)cc=enemies.length;
-  let cr=t.chainRange||110;
+  let cr=t.chainRange||120;
   let list=[firstTarget],cur=firstTarget;
   while(list.length<cc){
     let poss=enemies.filter(e=>!list.includes(e)&&Math.hypot(e.x-cur.x,e.y-cur.y)<=cr);
@@ -1632,14 +1553,13 @@ function fireTesla(t,firstTarget,dmg){
       let mx=sx+(e.x-sx)*p1,my=sy+(e.y-sy)*p1;
       let mx2=sx+(e.x-sx)*p2,my2=sy+(e.y-sy)*p2;
       let perp=Math.atan2(e.y-sy,e.x-sx)+Math.PI/2;
-      let j=(Math.random()-0.5)*28;
+      let j=(Math.random()-0.5)*32;
       segs.push({x1:mx+Math.cos(perp)*j,y1:my+Math.sin(perp)*j,x2:mx2,y2:my2});
     }
-    lightningVisuals.push({segs,life:8,color:t.type==="chain_lightning"?"#bae6fd":"#c084fc",width:Math.max(0.5,2-idx*0.15)});
+    lightningVisuals.push({segs,life:8,color:t.type==="chain_lightning"?"#bae6fd":t.type==="arc_tower"?"#ddd6fe":"#c084fc",width:Math.max(0.5,2-idx*0.15)});
     if(e.hp<=0)killEnemy(enemies.indexOf(e),e);
   });
 }
-
 function fireRailgun(t,dmg){
   let cfg=TOWER_TYPES[t.type];
   let rng=cfg.range*(t.rangeMult||1);
@@ -1648,10 +1568,10 @@ function fireRailgun(t,dmg){
     let ang=t.angle+(r-Math.floor(rails/2))*0.1;
     let ex=t.x+Math.cos(ang)*rng,ey=t.y+Math.sin(ang)*rng;
     let bx=t.x+Math.cos(ang)*cfg.barrelLen,by=t.y+Math.sin(ang)*cfg.barrelLen;
-    lightningVisuals.push({segs:[{x1:bx,y1:by,x2:ex,y2:ey}],life:10,color:t.type==="beam_cannon"?"#d8b4fe":"#93c5fd",width:t.type==="beam_cannon"?6:4});
+    lightningVisuals.push({segs:[{x1:bx,y1:by,x2:ex,y2:ey}],life:10,color:t.type==="beam_cannon"?"#d8b4fe":"#93c5fd",width:t.type==="beam_cannon"?7:4.5});
     for(let i=enemies.length-1;i>=0;i--){
       let e=enemies[i];
-      if(ptSegDist(e.x,e.y,bx,by,ex,ey)<(e.size+8)){
+      if(ptSegDist(e.x,e.y,bx,by,ex,ey)<(e.size+9)){
         let d2=Math.max(0,dmg-e.armor+(t.armorPierce||0));
         if(t.executeThresh&&e.hp/e.maxHp<t.executeThresh)d2=e.hp+1;
         e.hp-=d2;
@@ -1662,7 +1582,6 @@ function fireRailgun(t,dmg){
     }
   }
 }
-
 function checkGameOver(){
   if(playerHp<=0){
     playerHp=0;gameIsOver=true;
@@ -1674,14 +1593,6 @@ function checkGameOver(){
 // ============================================================
 // DRAWING
 // ============================================================
-function getTowerVisualColor(t){
-  let cfg=TOWER_TYPES[t.type];
-  let upgCount=(t.upgrades||[]).length;
-  if(upgCount===0)return cfg.baseColor||cfg.color;
-  // Shift hue/brightness as tower upgrades
-  return cfg.color; // base; glow handles the rest
-}
-
 function drawTowerBody(t){
   let cfg=TOWER_TYPES[t.type];
   let sz=cfg.towerSize||18;
@@ -1690,75 +1601,41 @@ function drawTowerBody(t){
   ctx.save();
   ctx.translate(t.x,t.y);
   // Shadow
-  if(graphicsPreset!=="low"){
-    ctx.fillStyle="rgba(0,0,0,0.25)";ctx.beginPath();ctx.arc(3,3,sz,0,Math.PI*2);ctx.fill();
-  }
-  // Upgrade visual enhancement
-  let glowIntensity=upgCount*0.15;
-  if(upgCount>=6){
-    // Outer ring - Maxed upgrade glow
-    ctx.strokeStyle=`hsla(${45+upgCount*20},100%,65%,0.9)`;
-    ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,sz+5,0,Math.PI*2);ctx.stroke();
-    // Spinning outer ring indicator
-    ctx.save();ctx.rotate(internalTicker*0.03);
-    ctx.strokeStyle=`hsla(${internalTicker*2%360},80%,60%,0.5)`;
-    ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
-    ctx.beginPath();ctx.arc(0,0,sz+9,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore();
-  } else if(upgCount>=4){
-    ctx.strokeStyle=`hsla(${60+upgCount*25},90%,60%,0.7)`;
-    ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,sz+4,0,Math.PI*2);ctx.stroke();
-  } else if(upgCount>=2){
-    ctx.strokeStyle=`hsla(${100+upgCount*30},80%,55%,0.5)`;
-    ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,sz+3,0,Math.PI*2);ctx.stroke();
-  }
-  // Main body with upgrade gradient
+  if(graphicsPreset!=="low"){ctx.fillStyle="rgba(0,0,0,0.28)";ctx.beginPath();ctx.arc(3.5,3.5,sz,0,Math.PI*2);ctx.fill();}
+  // Upgrade glow rings
+  if(upgCount>=6&&graphicsPreset!=="low"){
+    ctx.strokeStyle=`hsla(${45+upgCount*20},100%,65%,0.9)`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,sz+6,0,Math.PI*2);ctx.stroke();
+    ctx.save();ctx.rotate(internalTicker*0.03);ctx.strokeStyle=`hsla(${internalTicker*2%360},80%,60%,0.5)`;ctx.lineWidth=1.5;ctx.setLineDash([5,5]);ctx.beginPath();ctx.arc(0,0,sz+10,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  }else if(upgCount>=4&&graphicsPreset!=="low"){ctx.strokeStyle=`hsla(${60+upgCount*25},90%,60%,0.7)`;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,sz+5,0,Math.PI*2);ctx.stroke();}
+  else if(upgCount>=2&&graphicsPreset!=="low"){ctx.strokeStyle=`hsla(${100+upgCount*30},80%,55%,0.5)`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,sz+4,0,Math.PI*2);ctx.stroke();}
+  // Body
   let grad=ctx.createRadialGradient(-sz*0.3,-sz*0.3,0,0,0,sz);
   let baseC=cfg.baseColor||cfg.color;
-  if(upgCount>=6){
-    grad.addColorStop(0,"#fff8e1");grad.addColorStop(0.5,baseC);grad.addColorStop(1,"#1a0000");
-  }else if(upgCount>=4){
-    grad.addColorStop(0,"#fffde4");grad.addColorStop(0.6,baseC);grad.addColorStop(1,"rgba(0,0,0,0.8)");
-  }else if(upgCount>=2){
-    grad.addColorStop(0,"rgba(255,255,220,0.4)");grad.addColorStop(0.7,baseC);grad.addColorStop(1,"rgba(0,0,0,0.6)");
-  }else{
-    grad.addColorStop(0,"rgba(255,255,255,0.25)");grad.addColorStop(1,baseC);
-  }
+  if(upgCount>=6){grad.addColorStop(0,"#fff8e1");grad.addColorStop(0.5,baseC);grad.addColorStop(1,"#1a0000");}
+  else if(upgCount>=4){grad.addColorStop(0,"#fffde4");grad.addColorStop(0.6,baseC);grad.addColorStop(1,"rgba(0,0,0,0.8)");}
+  else if(upgCount>=2){grad.addColorStop(0,"rgba(255,255,220,0.4)");grad.addColorStop(0.7,baseC);grad.addColorStop(1,"rgba(0,0,0,0.6)");}
+  else{grad.addColorStop(0,"rgba(255,255,255,0.25)");grad.addColorStop(1,baseC);}
   ctx.fillStyle=grad;
   ctx.strokeStyle=isSelected?"#fff":`rgba(255,255,255,${0.2+upgCount*0.06})`;
   ctx.lineWidth=isSelected?3:1.5;
-  // Special shapes for unique tower types
   if(cfg.isOracle||cfg.isGoldMine){
-    // Hexagonal
-    ctx.beginPath();
-    for(let k=0;k<6;k++){let a=k*Math.PI/3-Math.PI/6;ctx.lineTo(Math.cos(a)*sz,Math.sin(a)*sz);}
-    ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.beginPath();for(let k=0;k<6;k++){let a=k*Math.PI/3-Math.PI/6;ctx.lineTo(Math.cos(a)*sz,Math.sin(a)*sz);}ctx.closePath();ctx.fill();ctx.stroke();
   }else if(cfg.isNuke||cfg.isEarthquake||t.type==="earthquake"){
-    // Octagonal for big towers
-    ctx.beginPath();
-    for(let k=0;k<8;k++){let a=k*Math.PI/4;ctx.lineTo(Math.cos(a)*sz,Math.sin(a)*sz);}
-    ctx.closePath();ctx.fill();ctx.stroke();
-  }else if(cfg.isBarrier||cfg.isFrost||t.type==="cryo_cannon"){
-    // Square rotated
-    ctx.save();ctx.rotate(Math.PI/4+internalTicker*0.01);
-    ctx.fillRect(-sz*0.85,-sz*0.85,sz*1.7,sz*1.7);
-    ctx.strokeRect(-sz*0.85,-sz*0.85,sz*1.7,sz*1.7);
-    ctx.restore();
+    ctx.beginPath();for(let k=0;k<8;k++){let a=k*Math.PI/4;ctx.lineTo(Math.cos(a)*sz,Math.sin(a)*sz);}ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(cfg.isBarrier||cfg.isFrost||t.type==="cryo_cannon"||t.type==="ice_wall"){
+    ctx.save();ctx.rotate(Math.PI/4+internalTicker*0.01);ctx.fillRect(-sz*0.85,-sz*0.85,sz*1.7,sz*1.7);ctx.strokeRect(-sz*0.85,-sz*0.85,sz*1.7,sz*1.7);ctx.restore();
   }else{
     ctx.beginPath();ctx.arc(0,0,sz,0,Math.PI*2);ctx.fill();ctx.stroke();
   }
   // Barrel
-  ctx.save();ctx.rotate(t.angle-(cfg.isBarrier||cfg.isGoldMine||cfg.isOracle?Math.PI/4:0));
+  ctx.save();ctx.rotate(t.angle);
   let ro=t.recoil||0;
   if(!cfg.isBarrier&&!cfg.isOracle&&!cfg.isGoldMine){
     let bgrad=ctx.createLinearGradient(0,-cfg.barrelW/2,0,cfg.barrelW/2);
     bgrad.addColorStop(0,"rgba(200,200,200,0.9)");bgrad.addColorStop(1,"rgba(80,80,80,0.9)");
-    ctx.fillStyle=bgrad;
-    ctx.strokeStyle="rgba(0,0,0,0.4)";ctx.lineWidth=1;
-    // Multi-barrel for gatling/multi-mortar
+    ctx.fillStyle=bgrad;ctx.strokeStyle="rgba(0,0,0,0.4)";ctx.lineWidth=1;
     if(t.type==="gatling"||(t.type==="minigun"&&upgCount>=4)){
-      for(let b=-1;b<=1;b++){
-        ctx.fillRect(-ro,-cfg.barrelW/2+b*(cfg.barrelW*0.55),cfg.barrelLen+6,cfg.barrelW*0.4);
-      }
+      for(let b=-1;b<=1;b++){ctx.fillRect(-ro,-cfg.barrelW/2+b*(cfg.barrelW*0.55),cfg.barrelLen+6,cfg.barrelW*0.4);}
     }else if(t.type==="multi_mortar"){
       ctx.fillRect(-ro,-cfg.barrelW/2,cfg.barrelLen,cfg.barrelW);
       ctx.fillRect(-ro,-cfg.barrelW-4,cfg.barrelLen*0.75,cfg.barrelW*0.7);
@@ -1767,12 +1644,10 @@ function drawTowerBody(t){
       ctx.fillRect(-ro,-cfg.barrelW/2,cfg.barrelLen,cfg.barrelW);
       ctx.strokeRect(-ro,-cfg.barrelW/2,cfg.barrelLen,cfg.barrelW);
     }
-    // Muzzle tip
     ctx.fillStyle=cfg.muzzleColor||"#ffaa00";
-    ctx.beginPath();ctx.arc(cfg.barrelLen-ro,0,cfg.barrelW*0.4,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(cfg.barrelLen-ro,0,cfg.barrelW*0.45,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
-  // Icon
   if(graphicsPreset!=="low"){
     ctx.font=`${10+Math.min(upgCount,4)}px Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
     ctx.fillStyle="rgba(255,255,255,"+(0.7+upgCount*0.05)+")";
@@ -1783,55 +1658,54 @@ function drawTowerBody(t){
 
 function draw(){
   let m=MAPS[currentMapIndex];
-  ctx.fillStyle=m.bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=m.bg;ctx.fillRect(0,0,GAME_W,GAME_H);
 
   // Pebbles
   if(graphicsPreset!=="low"){
-    ctx.fillStyle="rgba(0,0,0,0.06)";
-    pebbles.forEach(p=>{ctx.beginPath();ctx.arc(p.x+1.5,p.y+1.5,p.size,0,Math.PI*2);ctx.fill();});
+    ctx.fillStyle="rgba(0,0,0,0.07)";
+    pebbles.forEach(p=>{ctx.beginPath();ctx.arc(p.x+1.8,p.y+1.8,p.size,0,Math.PI*2);ctx.fill();});
   }
   ctx.fillStyle=m.roadColor;
   pebbles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();});
 
   // Path
-  ctx.lineWidth=44;ctx.strokeStyle=m.roadColor;ctx.lineCap="round";ctx.lineJoin="round";
+  ctx.lineWidth=52;ctx.strokeStyle=m.roadColor;ctx.lineCap="round";ctx.lineJoin="round";
   ctx.beginPath();
   let pts=m.path;ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);
   ctx.stroke();
   if(graphicsPreset==="high"||graphicsPreset==="ultra"){
-    ctx.strokeStyle="rgba(0,0,0,0.07)";ctx.lineWidth=42;ctx.stroke();
+    ctx.strokeStyle="rgba(0,0,0,0.07)";ctx.lineWidth=50;ctx.stroke();
     ctx.strokeStyle="rgba(255,255,255,0.06)";ctx.lineWidth=2;ctx.stroke();
   }
 
-  // Grass tufts
+  // Grass
   if(graphicsPreset==="ultra"&&m.decorType!=="rock"){
-    ctx.strokeStyle="rgba(0,0,0,0.13)";ctx.lineWidth=1.2;
+    ctx.strokeStyle="rgba(0,0,0,0.14)";ctx.lineWidth=1.3;
     grassTufts.forEach(g=>{g.blades.forEach(b=>{ctx.beginPath();ctx.moveTo(g.x,g.y);ctx.quadraticCurveTo(g.x+b.curve,g.y+b.dy/2,g.x+b.dx,g.y+b.dy);ctx.stroke();});});
   }
 
   // Decorations
   environmentDecorations.forEach(d=>{
     ctx.save();
-    if(graphicsPreset!=="low"){ctx.fillStyle="rgba(0,0,0,0.2)";ctx.beginPath();ctx.arc(d.x+d.size*0.22,d.y+d.size*0.22,d.size,0,Math.PI*2);ctx.fill();}
+    if(graphicsPreset!=="low"){ctx.fillStyle="rgba(0,0,0,0.22)";ctx.beginPath();ctx.arc(d.x+d.size*0.24,d.y+d.size*0.24,d.size,0,Math.PI*2);ctx.fill();}
     ctx.fillStyle=d.color;
     if(d.type==="tree"){ctx.beginPath();ctx.arc(d.x,d.y,d.size,0,Math.PI*2);ctx.fill();}
     else if(d.type==="pine"){
-      ctx.beginPath();ctx.moveTo(d.x,d.y-d.size);ctx.lineTo(d.x-d.size*0.8,d.y+d.size*0.8);ctx.lineTo(d.x+d.size*0.8,d.y+d.size*0.8);ctx.closePath();ctx.fill();
-      ctx.beginPath();ctx.moveTo(d.x,d.y-d.size*0.5);ctx.lineTo(d.x-d.size*1.1,d.y+d.size*1.1);ctx.lineTo(d.x+d.size*1.1,d.y+d.size*1.1);ctx.closePath();ctx.fill();
-    }
-    else{ctx.beginPath();ctx.arc(d.x,d.y,d.size*0.75,0,Math.PI*2);ctx.fill();}
+      ctx.beginPath();ctx.moveTo(d.x,d.y-d.size);ctx.lineTo(d.x-d.size*0.85,d.y+d.size*0.85);ctx.lineTo(d.x+d.size*0.85,d.y+d.size*0.85);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(d.x,d.y-d.size*0.55);ctx.lineTo(d.x-d.size*1.15,d.y+d.size*1.15);ctx.lineTo(d.x+d.size*1.15,d.y+d.size*1.15);ctx.closePath();ctx.fill();
+    }else{ctx.beginPath();ctx.arc(d.x,d.y,d.size*0.8,0,Math.PI*2);ctx.fill();}
     ctx.restore();
   });
 
-  // Tower range preview (selected type)
+  // Tower range preview
   if(selectedTowerType&&isMouseOnCanvas){
     let cfg=TOWER_TYPES[selectedTowerType];
-    let blocked=isOnPath(mouseX,mouseY,36)||isOnDecoration(mouseX,mouseY)||towers.some(t=>Math.hypot(t.x-mouseX,t.y-mouseY)<50);
+    let blocked=isOnPath(mouseX,mouseY,40)||isOnDecoration(mouseX,mouseY)||towers.some(t=>Math.hypot(t.x-mouseX,t.y-mouseY)<55);
     ctx.save();
     ctx.fillStyle=blocked?"rgba(245,101,101,0.1)":"rgba(66,153,225,0.08)";
     ctx.strokeStyle=blocked?"#f56565":"#3182ce";
-    ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+    ctx.lineWidth=1.5;ctx.setLineDash([7,5]);
     ctx.beginPath();ctx.arc(mouseX,mouseY,cfg.range,0,Math.PI*2);ctx.fill();ctx.stroke();
     ctx.setLineDash([]);
     ctx.globalAlpha=0.65;
@@ -1840,13 +1714,13 @@ function draw(){
     let tsz=cfg.towerSize||18;
     ctx.beginPath();ctx.arc(mouseX,mouseY,tsz,0,Math.PI*2);ctx.fill();ctx.stroke();
     ctx.globalAlpha=1;
-    ctx.font="bold 12px Arial";ctx.textAlign="center";
+    ctx.font="bold 14px Arial";ctx.textAlign="center";
     ctx.fillStyle=blocked?"#f56565":"#fff";
-    ctx.fillText(blocked?"✕ Blocked":cfg.emoji+" "+cfg.name,mouseX,mouseY-tsz-8);
+    ctx.fillText(blocked?"Blocked":cfg.emoji+" "+cfg.name,mouseX,mouseY-tsz-10);
     ctx.restore();
   }
 
-  // Selected tower range
+  // Selected tower range ring
   if(selectedTowerObj){
     let cfg=TOWER_TYPES[selectedTowerObj.type];
     let rng=cfg.range*(selectedTowerObj.rangeMult||1);
@@ -1854,113 +1728,161 @@ function draw(){
     ctx.beginPath();ctx.arc(selectedTowerObj.x,selectedTowerObj.y,rng,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
   }
 
-  // Draw all towers
   towers.forEach(t=>drawTowerBody(t));
 
   // Laser beams
   towers.forEach(t=>{
     if(!TOWER_TYPES[t.type].isLaser)return;
-    let cfg=TOWER_TYPES[t.type];
-    let rng=cfg.range*(t.rangeMult||1);
+    let cfg=TOWER_TYPES[t.type];let rng=cfg.range*(t.rangeMult||1);
     let vt=enemies.filter(e=>Math.hypot(e.x-t.x,e.y-t.y)<=rng);
     if(!vt.length)return;
     vt.sort((a,b)=>b.dist-a.dist);let tgt=vt[0];
     ctx.save();
     let alpha=0.7+Math.sin(internalTicker*0.4)*0.3;
-    let lw=(t.laserWidth||2)*(1+(t.dmgMult||1)*0.1);
-    ctx.strokeStyle=`rgba(239,68,68,${alpha})`;ctx.lineWidth=Math.min(lw,6);
-    ctx.shadowColor="#ef4444";ctx.shadowBlur=14;
-    ctx.beginPath();ctx.moveTo(t.x+Math.cos(t.angle)*cfg.barrelLen,t.y+Math.sin(t.angle)*cfg.barrelLen);
-    ctx.lineTo(tgt.x,tgt.y);ctx.stroke();
+    let lw=Math.min((t.laserWidth||2)*(1+(t.dmgMult||1)*0.1),7);
+    // Multi-layer bloom for laser
+    if(graphicsPreset!=="low"){
+      ctx.strokeStyle=`rgba(239,68,68,${alpha*0.3})`;ctx.lineWidth=lw*4;ctx.shadowColor="#ef4444";ctx.shadowBlur=30;
+      ctx.beginPath();ctx.moveTo(t.x+Math.cos(t.angle)*cfg.barrelLen,t.y+Math.sin(t.angle)*cfg.barrelLen);ctx.lineTo(tgt.x,tgt.y);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,180,180,${alpha*0.5})`;ctx.lineWidth=lw*2;ctx.shadowBlur=18;
+      ctx.beginPath();ctx.moveTo(t.x+Math.cos(t.angle)*cfg.barrelLen,t.y+Math.sin(t.angle)*cfg.barrelLen);ctx.lineTo(tgt.x,tgt.y);ctx.stroke();
+    }
+    ctx.strokeStyle=`rgba(255,240,240,${alpha})`;ctx.lineWidth=lw;ctx.shadowColor="#ff8888";ctx.shadowBlur=10;
+    ctx.beginPath();ctx.moveTo(t.x+Math.cos(t.angle)*cfg.barrelLen,t.y+Math.sin(t.angle)*cfg.barrelLen);ctx.lineTo(tgt.x,tgt.y);ctx.stroke();
     ctx.restore();
   });
 
   // Lightning visuals
   lightningVisuals.forEach(lv=>{
-    ctx.save();ctx.strokeStyle=lv.color;ctx.lineWidth=Math.max(0.5,lv.width*(lv.life/9));
-    ctx.shadowColor=lv.color;ctx.shadowBlur=10;
+    ctx.save();
+    if(graphicsPreset!=="low"){
+      // Bloom layer
+      ctx.strokeStyle=lv.color.replace(")",",0.25)").replace("rgb","rgba");
+      ctx.lineWidth=Math.max(1,lv.width*(lv.life/9))*5;
+      ctx.shadowColor=lv.color;ctx.shadowBlur=20;
+      lv.segs.forEach(s=>{ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();});
+    }
+    ctx.strokeStyle=lv.color;ctx.lineWidth=Math.max(0.5,lv.width*(lv.life/9));
+    ctx.shadowColor=lv.color;ctx.shadowBlur=12;
     lv.segs.forEach(s=>{ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();});
     ctx.restore();
   });
 
-  // Projectiles
+  // Projectiles — enhanced glow/bloom
   projectiles.forEach(p=>{
     ctx.save();
-    let col=p.isFrost?"#22d3ee":p.type==="plasma"||p.type==="mortar"||p.type==="multi_mortar"?"#f97316":p.type==="nuke"?"#ef4444":p.type==="missile"?"#6366f1":p.type==="poison_rain"?"#a3e635":"#e2e8f0";
-    let sz=p.type==="plasma"||p.type==="nuke"?11:p.type==="mortar"||p.type==="multi_mortar"?8:p.type==="missile"?7:5;
-    if(graphicsPreset!=="low"){ctx.shadowColor=col;ctx.shadowBlur=8;}
-    ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();
+    let col,sz,glowR,glowCol;
+    if(p.isFrost){col="#22d3ee";sz=6;glowR=16;glowCol="#67e8f9";}
+    else if(p.type==="plasma"||p.type==="nuke"){col="#f97316";sz=13;glowR=30;glowCol="#fbbf24";}
+    else if(p.type==="mortar"||p.type==="multi_mortar"){col="#f97316";sz=9;glowR=18;glowCol="#fcd34d";}
+    else if(p.type==="missile"){col="#6366f1";sz=8;glowR=15;glowCol="#a5b4fc";}
+    else if(p.type==="poison_rain"||p.type==="poison"){col="#a3e635";sz=7;glowR=12;glowCol="#bef264";}
+    else if(p.type==="railgun"||p.type==="beam_cannon"||p.type==="needle"){col="#93c5fd";sz=6;glowR=14;glowCol="#bfdbfe";}
+    else if(p.type==="tesla"||p.type==="chain_lightning"||p.type==="arc_tower"){col="#c084fc";sz=6;glowR=14;glowCol="#e9d5ff";}
+    else{col="#e2e8f0";sz=5;glowR=10;glowCol="#ffffff";}
+
+    if(graphicsPreset!=="low"){
+      // Outer bloom
+      let grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,glowR*1.8);
+      grad.addColorStop(0,glowCol+"88");
+      grad.addColorStop(0.5,col+"44");
+      grad.addColorStop(1,"transparent");
+      ctx.fillStyle=grad;
+      ctx.beginPath();ctx.arc(p.x,p.y,glowR*1.8,0,Math.PI*2);ctx.fill();
+      // Inner glow
+      ctx.shadowColor=glowCol;ctx.shadowBlur=glowR;
+    }
+    // Core
+    ctx.fillStyle=col;
+    ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();
+    // Bright core
+    if(graphicsPreset!=="low"){
+      ctx.fillStyle="#ffffff88";
+      ctx.beginPath();ctx.arc(p.x-sz*0.25,p.y-sz*0.25,sz*0.45,0,Math.PI*2);ctx.fill();
+    }
     ctx.restore();
   });
 
-  // Muzzle flashes
+  // Muzzle flashes — enhanced
   muzzleFlashes.forEach(f=>{
     ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);
-    ctx.fillStyle=f.color;ctx.globalAlpha=f.life/f.maxLife;
-    if(graphicsPreset!=="low"){ctx.shadowColor=f.color;ctx.shadowBlur=12;}
+    let a=f.life/f.maxLife;
+    if(graphicsPreset!=="low"){
+      // Bloom
+      let grad=ctx.createRadialGradient(f.size*0.4,0,0,0,0,f.size*2.2);
+      grad.addColorStop(0,f.color+"cc");
+      grad.addColorStop(0.5,f.color+"55");
+      grad.addColorStop(1,"transparent");
+      ctx.globalAlpha=a;
+      ctx.fillStyle=grad;ctx.beginPath();ctx.arc(f.size*0.4,0,f.size*2.2,0,Math.PI*2);ctx.fill();
+      ctx.shadowColor=f.color;ctx.shadowBlur=20;
+    }
+    ctx.fillStyle=f.color;ctx.globalAlpha=a;
     ctx.beginPath();ctx.moveTo(0,-f.size/2);ctx.lineTo(f.size,0);ctx.lineTo(0,f.size/2);ctx.closePath();ctx.fill();
+    // Bright center dot
+    ctx.fillStyle="#ffffff";ctx.globalAlpha=a*0.8;
+    ctx.beginPath();ctx.arc(0,0,f.size*0.3,0,Math.PI*2);ctx.fill();
     ctx.restore();
   });
 
   // Enemies
   enemies.forEach(e=>{
     ctx.save();
-    let bob=Math.sin(internalTicker*0.18*e.speed)*2.2;
+    let bob=Math.sin(internalTicker*0.18*e.speed)*2.5;
     let sway=Math.cos(internalTicker*0.12*e.speed)*0.08;
     ctx.translate(e.x,e.y+bob);ctx.rotate(sway);
-    if(graphicsPreset!=="low"){ctx.fillStyle="rgba(0,0,0,0.22)";ctx.beginPath();ctx.arc(2,2,e.size,0,Math.PI*2);ctx.fill();}
-    if(e.phase){ctx.globalAlpha=0.5+Math.sin(internalTicker*0.14)*0.25;}
-    // Gradient body
+    if(graphicsPreset!=="low"){ctx.fillStyle="rgba(0,0,0,0.24)";ctx.beginPath();ctx.arc(2.5,2.5,e.size,0,Math.PI*2);ctx.fill();}
+    if(e.phase)ctx.globalAlpha=0.5+Math.sin(internalTicker*0.14)*0.25;
     let eg=ctx.createRadialGradient(-e.size*0.3,-e.size*0.3,0,0,0,e.size);
     eg.addColorStop(0,"rgba(255,255,255,0.4)");eg.addColorStop(0.5,e.color);eg.addColorStop(1,"rgba(0,0,0,0.7)");
     ctx.fillStyle=eg;
     ctx.beginPath();ctx.arc(0,0,e.size,0,Math.PI*2);ctx.fill();
-    if(e.armor>0){ctx.strokeStyle="rgba(200,200,220,0.7)";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,e.size+1.5,0,Math.PI*2);ctx.stroke();}
-    if(e.slowTimer>0){ctx.fillStyle="rgba(6,182,212,0.3)";ctx.beginPath();ctx.arc(0,0,e.size+2,0,Math.PI*2);ctx.fill();}
-    if(e.burnTimer>0){ctx.fillStyle="rgba(255,100,0,0.35)";ctx.beginPath();ctx.arc(0,0,e.size+1.5,0,Math.PI*2);ctx.fill();}
-    if(e.poisonTimer>0){ctx.fillStyle="rgba(132,204,22,0.35)";ctx.beginPath();ctx.arc(0,0,e.size+1.5,0,Math.PI*2);ctx.fill();}
+    if(e.armor>0){ctx.strokeStyle="rgba(200,200,220,0.7)";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,e.size+2,0,Math.PI*2);ctx.stroke();}
+    if(e.slowTimer>0){ctx.fillStyle="rgba(6,182,212,0.3)";ctx.beginPath();ctx.arc(0,0,e.size+2.5,0,Math.PI*2);ctx.fill();}
+    if(e.burnTimer>0){ctx.fillStyle="rgba(255,100,0,0.35)";ctx.beginPath();ctx.arc(0,0,e.size+2,0,Math.PI*2);ctx.fill();}
+    if(e.poisonTimer>0){ctx.fillStyle="rgba(132,204,22,0.35)";ctx.beginPath();ctx.arc(0,0,e.size+2,0,Math.PI*2);ctx.fill();}
     ctx.globalAlpha=1;ctx.restore();
-    // HP bar with percentage
     if(e.hp<e.maxHp||e.type==="megaboss"||e.type==="boss"){
-      let bw=Math.max(e.size*2.4,28),bh=5;
-      let pct=Math.max(0,e.hp/e.maxHp);
-      ctx.fillStyle="rgba(0,0,0,0.55)";ctx.fillRect(e.x-bw/2,e.y-e.size-14,bw,bh);
+      let bw=Math.max(e.size*2.6,30),bh=5;let pct=Math.max(0,e.hp/e.maxHp);
+      ctx.fillStyle="rgba(0,0,0,0.55)";ctx.fillRect(e.x-bw/2,e.y-e.size-15,bw,bh);
       ctx.fillStyle=pct>0.6?"#48bb78":pct>0.3?"#ed8936":"#f56565";
-      ctx.fillRect(e.x-bw/2,e.y-e.size-14,bw*pct,bh);
-      // HP percentage text
+      ctx.fillRect(e.x-bw/2,e.y-e.size-15,bw*pct,bh);
       ctx.fillStyle="#fff";ctx.font="bold 8px Arial";ctx.textAlign="center";
-      ctx.fillText(`${Math.ceil(pct*100)}%`,e.x,e.y-e.size-16);
+      ctx.fillText(`${Math.ceil(pct*100)}%`,e.x,e.y-e.size-17);
     }
   });
 
-  // Particles
+  // Particles — with glow
   particles.forEach(pt=>{
-    ctx.save();ctx.fillStyle=pt.color;ctx.globalAlpha=Math.max(0,pt.life/24);
-    if(graphicsPreset==="ultra"){ctx.shadowColor=pt.color;ctx.shadowBlur=4;}
-    ctx.fillRect(pt.x,pt.y,pt.size,pt.size);ctx.restore();
+    ctx.save();
+    let alpha=Math.max(0,pt.life/24);
+    if(graphicsPreset!=="low"){ctx.shadowColor=pt.color;ctx.shadowBlur=8;}
+    ctx.fillStyle=pt.color;ctx.globalAlpha=alpha;
+    ctx.fillRect(pt.x,pt.y,pt.size,pt.size);
+    ctx.restore();
   });
 
-  // Floating texts
   floatingTexts.forEach(ft=>{
     ctx.save();ctx.fillStyle=ft.color;ctx.globalAlpha=Math.max(0,ft.life/55);
-    ctx.font="bold 13px 'Segoe UI',Arial";ctx.textAlign="center";
+    ctx.font="bold 14px 'Segoe UI',Arial";ctx.textAlign="center";
+    if(graphicsPreset!=="low"){ctx.shadowColor=ft.color;ctx.shadowBlur=8;}
     ctx.fillText(ft.text,ft.x,ft.y);ctx.restore();
   });
 
   // Wave banner
   if(bannerTimer>0){
     let a=Math.min(1,bannerTimer/20);
-    ctx.save();ctx.fillStyle=`rgba(0,0,0,${a*0.8})`;ctx.fillRect(0,canvas.height/2-44,canvas.width,88);
-    ctx.font="bold 36px 'Segoe UI',Arial";ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.textAlign="center";ctx.textBaseline="middle";
-    ctx.fillText(bannerText,canvas.width/2,canvas.height/2);ctx.restore();
+    ctx.save();ctx.fillStyle=`rgba(0,0,0,${a*0.75})`;ctx.fillRect(0,GAME_H/2-50,GAME_W,100);
+    ctx.font="bold 42px 'Segoe UI',Arial";ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.textAlign="center";ctx.textBaseline="middle";
+    if(graphicsPreset!=="low"){ctx.shadowColor="#3b82f6";ctx.shadowBlur=24;}
+    ctx.fillText(bannerText,GAME_W/2,GAME_H/2);ctx.restore();
   }
 }
 
 // ============================================================
 // MAIN LOOP
 // ============================================================
-let lastFrameTime=0;
-function masterLoop(ts){
+function masterLoop(){
   if(!gameIsOver&&!gameIsVictory){
     for(let s=0;s<gameSpeed;s++){updateLogic();if(playerHp<=0){checkGameOver();break;}}
   }
@@ -1973,10 +1895,16 @@ function masterLoop(ts){
 window.addEventListener("click",initAudio,{once:true});
 window.addEventListener("touchstart",initAudio,{once:true});
 applyTheme("dark");
-generateDecorations();
-buildShop();
-updateUI();
-requestAnimationFrame(masterLoop);
+// Wait for layout to stabilize before sizing canvas
+requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+    resizeCanvas();
+    generateDecorations();
+    buildShop();
+    updateUI();
+    requestAnimationFrame(masterLoop);
+  });
+});
 </script>
 </body>
 </html>
